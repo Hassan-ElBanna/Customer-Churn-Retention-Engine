@@ -8,7 +8,11 @@ import joblib
 import numpy as np
 import pandas as pd
 from sklearn.dummy import DummyClassifier
-from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
+from sklearn.ensemble import (
+    GradientBoostingClassifier,
+    RandomForestClassifier,
+    VotingClassifier,
+)
 from sklearn.linear_model import LogisticRegression
 
 from churn_engine.models.evaluator import ModelEvaluator
@@ -42,53 +46,74 @@ class ChurnModelTrainer:
         self.champion_threshold: float = 0.50
 
     def _build_candidate_models(self, X_train: pd.DataFrame, y_train: pd.Series) -> Dict[str, Any]:
-        """Instantiate candidate models (Naive baseline, Logistic Regression, Random Forest, XGBoost)."""
-        pos_count = max(int((y_train == 1).sum()), 1)
-        neg_count = max(int((y_train == 0).sum()), 1)
-        scale_pos_weight = round(neg_count / pos_count, 2)
+        """Instantiate tuned candidate models optimized for high classification accuracy & ROC-AUC."""
+        lr_tuned = LogisticRegression(
+            C=0.25,
+            penalty="l2",
+            solver="lbfgs",
+            max_iter=1500,
+            random_state=self.random_state,
+        )
+        rf_tuned = RandomForestClassifier(
+            n_estimators=400,
+            max_depth=9,
+            min_samples_split=8,
+            min_samples_leaf=4,
+            max_features="sqrt",
+            random_state=self.random_state,
+            n_jobs=-1,
+        )
+        gb_tuned = GradientBoostingClassifier(
+            n_estimators=250,
+            learning_rate=0.03,
+            max_depth=3,
+            min_samples_split=15,
+            min_samples_leaf=10,
+            subsample=0.85,
+            random_state=self.random_state,
+        )
 
         candidates: Dict[str, Any] = {
-            "naive_baseline": DummyClassifier(strategy="prior", random_state=self.random_state),
-            "logistic_regression": LogisticRegression(
-                C=1.0,
-                max_iter=1000,
-                class_weight="balanced",
-                random_state=self.random_state,
-            ),
-            "random_forest": RandomForestClassifier(
-                n_estimators=200,
-                max_depth=10,
-                min_samples_split=5,
-                class_weight="balanced",
-                random_state=self.random_state,
-                n_jobs=-1,
-            ),
-            "gradient_boosting": GradientBoostingClassifier(
-                n_estimators=200,
-                learning_rate=0.05,
-                max_depth=4,
-                subsample=0.8,
-                random_state=self.random_state,
-            ),
+            "naive_baseline": DummyClassifier(strategy="most_frequent", random_state=self.random_state),
+            "logistic_regression": lr_tuned,
+            "random_forest": rf_tuned,
+            "gradient_boosting": gb_tuned,
         }
+
+        voting_estimators = [
+            ("lr", lr_tuned),
+            ("rf", rf_tuned),
+            ("gb", gb_tuned),
+        ]
 
         try:
             xgb_module = importlib.import_module("xgboost")
             XGBClassifier = getattr(xgb_module, "XGBClassifier")
 
-            candidates["xgboost"] = XGBClassifier(
-                n_estimators=250,
-                learning_rate=0.05,
-                max_depth=5,
-                subsample=0.8,
-                colsample_bytree=0.8,
-                scale_pos_weight=scale_pos_weight,
+            xgb_tuned = XGBClassifier(
+                n_estimators=350,
+                learning_rate=0.025,
+                max_depth=4,
+                min_child_weight=6,
+                subsample=0.85,
+                colsample_bytree=0.75,
+                reg_alpha=0.5,
+                reg_lambda=2.5,
+                gamma=0.15,
                 eval_metric="logloss",
                 random_state=self.random_state,
                 n_jobs=-1,
             )
+            candidates["xgboost"] = xgb_tuned
+            voting_estimators.append(("xgb", xgb_tuned))
         except (ImportError, AttributeError):
             logger.warning("XGBoost not installed; skipping XGBClassifier candidate.")
+
+        candidates["voting_ensemble"] = VotingClassifier(
+            estimators=voting_estimators,
+            voting="soft",
+            n_jobs=-1,
+        )
 
         return candidates
 
@@ -123,14 +148,25 @@ class ChurnModelTrainer:
                 )
 
             logger.info(
-                f"[{name}] Val ROC-AUC: {val_metrics['roc_auc']:.4f} | "
+                f"[{name}] Val Accuracy: {val_metrics['accuracy']:.4f} | "
+                f"ROC-AUC: {val_metrics['roc_auc']:.4f} | "
                 f"PR-AUC: {val_metrics['pr_auc']:.4f} | "
                 f"F1: {val_metrics['f1_score']:.4f} | "
                 f"Optimal Thresh: {val_metrics['optimal_threshold']:.3f}"
             )
 
-            if name != "naive_baseline" and val_metrics[self.primary_metric] > best_score:
-                best_score = val_metrics[self.primary_metric]
+            score = val_metrics[self.primary_metric]
+            # Tie-breaker: use ROC-AUC when primary_metric (e.g., accuracy) is tied
+            best_auc = (
+                self.leaderboard[self.champion_name]["roc_auc"]
+                if self.champion_name in self.leaderboard
+                else -1.0
+            )
+            if name != "naive_baseline" and (
+                score > best_score
+                or (abs(score - best_score) < 1e-6 and val_metrics["roc_auc"] > best_auc)
+            ):
+                best_score = score
                 self.champion_name = name
                 self.champion_model = model
                 self.champion_threshold = val_metrics["optimal_threshold"]
@@ -151,14 +187,25 @@ class ChurnModelTrainer:
             )
             summary["champion_test_metrics"] = test_metrics
             logger.info(
-                f"Champion '{self.champion_name}' Test ROC-AUC: {test_metrics['roc_auc']:.4f} "
+                f"Champion '{self.champion_name}' Test Accuracy: {test_metrics['accuracy']:.4f} | "
+                f"Test ROC-AUC: {test_metrics['roc_auc']:.4f} "
                 f"(95% CI: {test_metrics['roc_auc_95ci']})"
             )
+
+            # Also evaluate all candidate models on the test set for complete comparison
+            test_leaderboard: Dict[str, Dict[str, Any]] = {}
+            for c_name, c_model in self.trained_models.items():
+                c_probs = c_model.predict_proba(X_test)[:, 1]
+                c_thresh = self.leaderboard[c_name]["optimal_threshold"]
+                test_leaderboard[c_name] = self.evaluator.evaluate(
+                    y_test, c_probs, threshold=c_thresh
+                )
+            summary["test_leaderboard"] = test_leaderboard
 
         return self.champion_name, self.champion_model, summary
 
     def get_feature_importances(self, feature_names: list[str], top_k: int = 10) -> Dict[str, float]:
-        """Extract top-K feature importances from the champion model."""
+        """Extract top-K feature importances from the champion model (including VotingClassifier)."""
         if self.champion_model is None:
             return {}
 
@@ -166,6 +213,19 @@ class ChurnModelTrainer:
             importances = np.asarray(self.champion_model.feature_importances_, dtype=float)
         elif hasattr(self.champion_model, "coef_"):
             importances = np.abs(np.asarray(self.champion_model.coef_[0], dtype=float))
+        elif hasattr(self.champion_model, "named_estimators_"):
+            # Average normalized importances across sub-estimators in VotingClassifier
+            sub_imps = []
+            for est in self.champion_model.named_estimators_.values():
+                if hasattr(est, "feature_importances_"):
+                    arr = np.asarray(est.feature_importances_, dtype=float)
+                    sub_imps.append(arr / max(arr.sum(), 1e-9))
+                elif hasattr(est, "coef_"):
+                    arr = np.abs(np.asarray(est.coef_[0], dtype=float))
+                    sub_imps.append(arr / max(arr.sum(), 1e-9))
+            if not sub_imps:
+                return {}
+            importances = np.mean(sub_imps, axis=0)
         else:
             return {}
 

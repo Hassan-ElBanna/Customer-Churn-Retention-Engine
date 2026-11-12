@@ -101,6 +101,7 @@ def test_trainer_and_retention_engine_end_to_end():
         "random_forest",
         "gradient_boosting",
         "xgboost",
+        "voting_ensemble",
     )
     assert summary["champion_test_metrics"]["roc_auc"] > 0.60
 

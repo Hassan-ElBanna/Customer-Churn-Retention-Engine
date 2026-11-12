@@ -482,6 +482,7 @@ class ChurnEDAAnalyzer:
             "random_forest": "#31a354",
             "gradient_boosting": "#756bb1",
             "xgboost": "#e34a33",
+            "voting_ensemble": "#d95f02",
         }
 
         # 1. Validation ROC Curves across all models

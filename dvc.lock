@@ -5,16 +5,16 @@ stages:
     deps:
     - path: configs/config.yaml
       hash: md5
-      md5: bd64a379c10078816b06efbc2f406da6
-      size: 1922
+      md5: e87f0cc80a5da9c82eba7397156c5386
+      size: 1904
     - path: pipelines/training_pipeline.py
       hash: md5
       md5: 01f116cf5fc125689189cbe3ae37632f
       size: 9522
     - path: src/churn_engine/data/eda.py
       hash: md5
-      md5: e405459fd73ac72d1d24cab598544490
-      size: 27516
+      md5: 58aa8cdf67a1a7677070c63cdade416e
+      size: 27558
     - path: src/churn_engine/data/ingestion.py
       hash: md5
       md5: a42d328ac6fbe332f29c8493c969f770
@@ -25,16 +25,16 @@ stages:
       size: 4317
     - path: src/churn_engine/features/preprocessor.py
       hash: md5
-      md5: f0a06f5fddadf9ee779b54f18d83aed7
-      size: 12927
+      md5: dd68f95527179b26f7e6892bca6974b7
+      size: 14511
     - path: src/churn_engine/models/evaluator.py
       hash: md5
-      md5: e6f7769b7f890c0891f7c7d2937081e4
-      size: 4022
+      md5: 219e279469d295696da4a61aff9be2a4
+      size: 4895
     - path: src/churn_engine/models/trainer.py
       hash: md5
-      md5: 7edf4a5a9ae5e74cb6ba9d28e57b38f4
-      size: 7741
+      md5: 578f45cc97de23fc630a61f6ad5c29a1
+      size: 10035
     - path: src/churn_engine/monitoring/drift.py
       hash: md5
       md5: def613b4882aae7aba96ab94ab6572be
@@ -46,36 +46,36 @@ stages:
     outs:
     - path: artifacts/models/champion_model.joblib
       hash: md5
-      md5: 707581fd39849d8433fb104fabebfd73
-      size: 3125
+      md5: 7f28596c26198e01e1cf762c2aec37da
+      size: 421235
     - path: artifacts/models/preprocessor.joblib
       hash: md5
-      md5: 5c130f712b5c807d7a58b1229893a419
-      size: 12369
+      md5: fd8f3759c47c56e5f6c334d253dfac48
+      size: 13162
     - path: artifacts/reports/data_validation_report.json
       hash: md5
       md5: 77579521b59d47b623801876ff2b5d28
       size: 337
     - path: artifacts/reports/drift_report.json
       hash: md5
-      md5: 368c219b97834894051ad20b9866b140
-      size: 8174
+      md5: cf764a49f3ea809cd191eb005185e715
+      size: 9079
     - path: artifacts/reports/evaluation_metrics.json
       hash: md5
-      md5: 841f892842ecfe7157e57ef726f5ee9e
-      size: 4528
+      md5: 214ba32a17041fa909bd2be9b8811091
+      size: 7923
     - path: data/processed/test.parquet
       hash: md5
-      md5: bf8d57ee86353b237462d295d086a730
-      size: 98343
+      md5: cd442a387a95f51fedb65565e3a311d6
+      size: 123458
     - path: data/processed/train.parquet
       hash: md5
-      md5: e0632bdeb32cf6c2366acfd844a8d828
-      size: 296535
+      md5: 1b3358a8381065b6b1a1f20f07e012af
+      size: 381505
     - path: data/processed/val.parquet
       hash: md5
-      md5: 3393bf719515a1fbf18b17fecf75c014
-      size: 98638
+      md5: 2cb821dc90f695016df6d3dc1d0472cc
+      size: 123813
     - path: data/raw/customer_churn.csv
       hash: md5
       md5: 3b0bfab28a8101b4e4fdd08025a5c235

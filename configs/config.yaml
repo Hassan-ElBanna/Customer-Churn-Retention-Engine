@@ -25,7 +25,7 @@ training:
   mlflow_tracking_uri: "https://dagshub.com/hmelbanna100/Customer-Churn-Retention-Engine.mlflow"
   dagshub_repo_owner: "hmelbanna100"
   dagshub_repo_name: "Customer-Churn-Retention-Engine"
-  primary_metric: "roc_auc"
+  primary_metric: "accuracy"
   business_cost_fn: 300.0   # Cost of False Negative (expected LTV loss of missed churner)
   business_cost_fp: 75.0    # Cost of False Positive (retention incentive + outreach cost)
   models:

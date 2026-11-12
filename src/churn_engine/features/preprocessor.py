@@ -174,6 +174,12 @@ class ChurnFeaturePreprocessor:
 
         if "tenure" in col_map:
             ten_col = col_map["tenure"]
+            df["tenure_log"] = np.log1p(df[ten_col].clip(lower=0))
+            df["tenure_squared"] = (df[ten_col].astype(float) ** 2) / 100.0
+            if "monthlycharges" in col_map:
+                df["monthly_charges_to_tenure_ratio"] = df[col_map["monthlycharges"]] / (
+                    df[ten_col].clip(lower=0) + 1.0
+                )
             df["tenure_cohort"] = pd.cut(
                 df[ten_col],
                 bins=[-1, 6, 12, 24, 48, 1000],
@@ -185,6 +191,36 @@ class ChurnFeaturePreprocessor:
                     "49m+_Loyal",
                 ],
             ).astype(str)
+
+        if "contract" in col_map:
+            c_col = col_map["contract"]
+            c_lower = df[c_col].astype(str).str.strip().str.lower()
+            df["contract_term_months"] = (
+                c_lower.map({"month-to-month": 1, "one year": 12, "two year": 24})
+                .fillna(1)
+                .astype(float)
+            )
+            if "monthlycharges" in col_map:
+                df["committed_contract_value"] = (
+                    df["contract_term_months"] * df[col_map["monthlycharges"]]
+                )
+
+        # High-risk triad flag: Month-to-month + Fiber optic + Electronic check
+        if (
+            "contract" in col_map
+            and "internetservice" in col_map
+            and "paymentmethod" in col_map
+        ):
+            is_mtm = (
+                df[col_map["contract"]].astype(str).str.lower().str.contains("month-to-month")
+            )
+            is_fib = (
+                df[col_map["internetservice"]].astype(str).str.lower().str.contains("fiber")
+            )
+            is_echk = (
+                df[col_map["paymentmethod"]].astype(str).str.lower().str.contains("electronic")
+            )
+            df["high_risk_triad_flag"] = (is_mtm & is_fib & is_echk).astype(int)
 
         # Domain Feature 4: Balance-to-Salary Ratio (Banking / SaaS churn datasets)
         if "balance" in col_map and "estimatedsalary" in col_map:

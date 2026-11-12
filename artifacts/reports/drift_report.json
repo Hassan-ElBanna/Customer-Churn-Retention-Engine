@@ -1,5 +1,5 @@
 {
-  "num_features_checked": 53,
+  "num_features_checked": 59,
   "num_drifted_features": 0,
   "drift_share": 0.0,
   "drifted_features": [],
@@ -74,6 +74,42 @@
     "is_autopay": {
       "psi": 0.0,
       "ks_statistic": 0.0005,
+      "ks_p_value": 1.0,
+      "drift_detected": false
+    },
+    "tenure_log": {
+      "psi": 0.0124,
+      "ks_statistic": 0.0236,
+      "ks_p_value": 0.704496,
+      "drift_detected": false
+    },
+    "tenure_squared": {
+      "psi": 0.0124,
+      "ks_statistic": 0.0236,
+      "ks_p_value": 0.704496,
+      "drift_detected": false
+    },
+    "monthly_charges_to_tenure_ratio": {
+      "psi": 0.005,
+      "ks_statistic": 0.0146,
+      "ks_p_value": 0.990679,
+      "drift_detected": false
+    },
+    "contract_term_months": {
+      "psi": 0.0,
+      "ks_statistic": 0.0067,
+      "ks_p_value": 1.0,
+      "drift_detected": false
+    },
+    "committed_contract_value": {
+      "psi": 0.0119,
+      "ks_statistic": 0.0356,
+      "ks_p_value": 0.214331,
+      "drift_detected": false
+    },
+    "high_risk_triad_flag": {
+      "psi": 0.0,
+      "ks_statistic": 0.002,
       "ks_p_value": 1.0,
       "drift_detected": false
     },

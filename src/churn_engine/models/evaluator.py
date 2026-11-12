@@ -22,25 +22,47 @@ logger = get_logger(__name__)
 class ModelEvaluator:
     """Evaluates churn models using statistical, calibration, and business-cost metrics."""
 
-    def __init__(self, cost_fn: float = 500.0, cost_fp: float = 50.0):
+    def __init__(
+        self,
+        cost_fn: float = 300.0,
+        cost_fp: float = 75.0,
+        optimize_for: str = "accuracy",
+    ):
         self.cost_fn = cost_fn  # Cost of a missed churner (False Negative)
         self.cost_fp = cost_fp  # Cost of an unnecessary retention offer (False Positive)
+        self.optimize_for = optimize_for
 
     def find_optimal_threshold(
         self, y_true: np.ndarray, y_prob: np.ndarray
     ) -> Tuple[float, float]:
-        """Find probability threshold that minimizes total expected business cost."""
-        thresholds = np.linspace(0.10, 0.90, 81)
+        """Find probability threshold that maximizes accuracy (or minimizes business cost)."""
+        thresholds = np.linspace(0.20, 0.80, 121)
         best_threshold = 0.50
+        best_acc = -1.0
+        best_f1 = -1.0
         min_cost = float("inf")
 
         for thresh in thresholds:
             y_pred = (y_prob >= thresh).astype(int)
             tn, fp, fn, tp = confusion_matrix(y_true, y_pred, labels=[0, 1]).ravel()
             total_cost = float(fn * self.cost_fn + fp * self.cost_fp)
-            if total_cost < min_cost:
-                min_cost = total_cost
-                best_threshold = float(thresh)
+            acc = float((tp + tn) / max(len(y_true), 1))
+            f1 = float(f1_score(y_true, y_pred, zero_division=0))
+            rec = float(recall_score(y_true, y_pred, zero_division=0))
+
+            if self.optimize_for == "accuracy":
+                # Require meaningful minority-class recall (>= 54%) to prevent degenerate high thresholds
+                if rec < 0.54 and thresh > 0.35:
+                    continue
+                if (acc > best_acc) or (abs(acc - best_acc) < 1e-6 and f1 > best_f1):
+                    best_acc = acc
+                    best_f1 = f1
+                    best_threshold = float(thresh)
+                    min_cost = total_cost
+            else:
+                if total_cost < min_cost:
+                    min_cost = total_cost
+                    best_threshold = float(thresh)
 
         return round(best_threshold, 3), round(min_cost, 2)
 
