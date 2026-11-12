@@ -1,0 +1,6 @@
+[core]
+    remote = origin
+['remote "origin"']
+    url = https://dagshub.com/hmelbanna100/Customer-Churn-Retention-Engine.dvc
+    auth = basic
+    user = hmelbanna100

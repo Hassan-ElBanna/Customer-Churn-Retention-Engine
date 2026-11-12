@@ -22,9 +22,9 @@ features:
 
 training:
   experiment_name: "customer_churn_retention"
-  mlflow_tracking_uri: "sqlite:///mlflow.db"
-  dagshub_repo_owner: ""   # Optional: set here or via DAGSHUB_REPO_OWNER in .env
-  dagshub_repo_name: ""    # Optional: set here or via DAGSHUB_REPO_NAME in .env
+  mlflow_tracking_uri: "https://dagshub.com/hmelbanna100/Customer-Churn-Retention-Engine.mlflow"
+  dagshub_repo_owner: "hmelbanna100"
+  dagshub_repo_name: "Customer-Churn-Retention-Engine"
   primary_metric: "roc_auc"
   business_cost_fn: 300.0   # Cost of False Negative (expected LTV loss of missed churner)
   business_cost_fp: 75.0    # Cost of False Positive (retention incentive + outreach cost)

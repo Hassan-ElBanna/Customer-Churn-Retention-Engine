@@ -93,7 +93,7 @@ class ExperimentTracker:
             return
 
         try:
-            with self.mlflow.start_run(run_name=f"candidate_{model_name}", nested=True):
+            with self.mlflow.start_run(run_name=f"candidate_{model_name}"):
                 self.mlflow.set_tag("model_type", model_name)
                 self.mlflow.set_tag("stage", "validation_candidate")
 
