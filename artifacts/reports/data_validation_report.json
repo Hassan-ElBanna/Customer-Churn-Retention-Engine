@@ -1,0 +1,17 @@
+{
+  "passed": true,
+  "num_rows": 7043,
+  "num_columns": 21,
+  "target_column": "Churn",
+  "target_present": true,
+  "target_distribution": {
+    "No": 0.7346,
+    "Yes": 0.2654
+  },
+  "duplicate_rows": 0,
+  "missing_summary": {},
+  "high_missing_columns": [],
+  "constant_columns": [],
+  "warnings": [],
+  "errors": []
+}

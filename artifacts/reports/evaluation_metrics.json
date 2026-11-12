@@ -1,0 +1,185 @@
+{
+  "champion_model": "logistic_regression",
+  "champion_threshold": 0.46,
+  "validation_leaderboard": {
+    "naive_baseline": {
+      "roc_auc": 0.5,
+      "roc_auc_95ci": [
+        0.5,
+        0.5
+      ],
+      "pr_auc": 0.2658,
+      "f1_score": 0.42,
+      "precision": 0.2658,
+      "recall": 1.0,
+      "accuracy": 0.2658,
+      "brier_score": 0.1952,
+      "optimal_threshold": 0.1,
+      "expected_business_cost": 58200.0,
+      "confusion_matrix": {
+        "tn": 0,
+        "fp": 776,
+        "fn": 0,
+        "tp": 281
+      }
+    },
+    "logistic_regression": {
+      "roc_auc": 0.8318,
+      "roc_auc_95ci": [
+        0.8094,
+        0.8582
+      ],
+      "pr_auc": 0.6315,
+      "f1_score": 0.6247,
+      "precision": 0.5078,
+      "recall": 0.8114,
+      "accuracy": 0.7408,
+      "brier_score": 0.1672,
+      "optimal_threshold": 0.46,
+      "expected_business_cost": 32475.0,
+      "confusion_matrix": {
+        "tn": 555,
+        "fp": 221,
+        "fn": 53,
+        "tp": 228
+      }
+    },
+    "random_forest": {
+      "roc_auc": 0.8289,
+      "roc_auc_95ci": [
+        0.8054,
+        0.8546
+      ],
+      "pr_auc": 0.6176,
+      "f1_score": 0.588,
+      "precision": 0.4399,
+      "recall": 0.8861,
+      "accuracy": 0.6698,
+      "brier_score": 0.152,
+      "optimal_threshold": 0.24,
+      "expected_business_cost": 33375.0,
+      "confusion_matrix": {
+        "tn": 459,
+        "fp": 317,
+        "fn": 32,
+        "tp": 249
+      }
+    },
+    "gradient_boosting": {
+      "roc_auc": 0.8286,
+      "roc_auc_95ci": [
+        0.8043,
+        0.8543
+      ],
+      "pr_auc": 0.625,
+      "f1_score": 0.6198,
+      "precision": 0.5056,
+      "recall": 0.8007,
+      "accuracy": 0.7389,
+      "brier_score": 0.1419,
+      "optimal_threshold": 0.22,
+      "expected_business_cost": 33300.0,
+      "confusion_matrix": {
+        "tn": 556,
+        "fp": 220,
+        "fn": 56,
+        "tp": 225
+      }
+    },
+    "xgboost": {
+      "roc_auc": 0.8274,
+      "roc_auc_95ci": [
+        0.8026,
+        0.8546
+      ],
+      "pr_auc": 0.6213,
+      "f1_score": 0.5892,
+      "precision": 0.444,
+      "recall": 0.8754,
+      "accuracy": 0.6755,
+      "brier_score": 0.1598,
+      "optimal_threshold": 0.25,
+      "expected_business_cost": 33600.0,
+      "confusion_matrix": {
+        "tn": 468,
+        "fp": 308,
+        "fn": 35,
+        "tp": 246
+      }
+    }
+  },
+  "champion_test_metrics": {
+    "roc_auc": 0.8533,
+    "roc_auc_95ci": [
+      0.8212,
+      0.874
+    ],
+    "pr_auc": 0.661,
+    "f1_score": 0.625,
+    "precision": 0.4979,
+    "recall": 0.8393,
+    "accuracy": 0.7332,
+    "brier_score": 0.1636,
+    "optimal_threshold": 0.38,
+    "expected_business_cost": 29850.0,
+    "confusion_matrix": {
+      "tn": 540,
+      "fp": 237,
+      "fn": 45,
+      "tp": 235
+    }
+  },
+  "top_feature_importances": {
+    "Contract_Two year": 0.8854,
+    "Contract_Month-to-month": 0.8616,
+    "InternetService_Fiber optic": 0.7132,
+    "tenure_cohort_0-6m_Onboarding": 0.6081,
+    "tenure": 0.5412,
+    "InternetService_DSL": 0.5399,
+    "PaperlessBilling_Yes": 0.3586,
+    "tenure_cohort_25-48m_Established": 0.3034,
+    "total_addon_services": 0.2815,
+    "StreamingMovies_Yes": 0.2784,
+    "MonthlyCharges": 0.2719,
+    "avg_monthly_spend_historical": 0.2602,
+    "StreamingTV_Yes": 0.2579,
+    "TechSupport_No": 0.2506,
+    "OnlineSecurity_No": 0.2321
+  },
+  "business_cost_comparison": {
+    "cost_at_default_050_threshold": 32400.0,
+    "cost_at_optimal_threshold": 31275.0,
+    "net_cost_savings_on_test_set": 1125.0,
+    "optimal_threshold": 0.46
+  },
+  "retention_tier_portfolio": [
+    {
+      "Risk_Tier": "Low (<30%)",
+      "customers": 460,
+      "actual_churn_rate": 3.7,
+      "total_annual_revenue": 304321.2,
+      "revenue_at_risk": 39056.0
+    },
+    {
+      "Risk_Tier": "Medium (30-60%)",
+      "customers": 235,
+      "actual_churn_rate": 25.53,
+      "total_annual_revenue": 184533.0,
+      "revenue_at_risk": 84054.36
+    },
+    {
+      "Risk_Tier": "High (60-80%)",
+      "customers": 198,
+      "actual_churn_rate": 44.95,
+      "total_annual_revenue": 181826.4,
+      "revenue_at_risk": 127584.62
+    },
+    {
+      "Risk_Tier": "Critical (>=80%)",
+      "customers": 164,
+      "actual_churn_rate": 69.51,
+      "total_annual_revenue": 156605.4,
+      "revenue_at_risk": 137017.92
+    }
+  ]
+}

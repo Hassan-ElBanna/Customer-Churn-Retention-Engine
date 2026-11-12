@@ -1,0 +1,327 @@
+{
+  "num_features_checked": 53,
+  "num_drifted_features": 0,
+  "drift_share": 0.0,
+  "drifted_features": [],
+  "retrain_recommended": false,
+  "features": {
+    "SeniorCitizen": {
+      "psi": 0.0,
+      "ks_statistic": 0.0012,
+      "ks_p_value": 1.0,
+      "drift_detected": false
+    },
+    "tenure": {
+      "psi": 0.0124,
+      "ks_statistic": 0.0236,
+      "ks_p_value": 0.704496,
+      "drift_detected": false
+    },
+    "MonthlyCharges": {
+      "psi": 0.0166,
+      "ks_statistic": 0.0376,
+      "ks_p_value": 0.165656,
+      "drift_detected": false
+    },
+    "TotalCharges": {
+      "psi": 0.0086,
+      "ks_statistic": 0.0186,
+      "ks_p_value": 0.917658,
+      "drift_detected": false
+    },
+    "avg_monthly_spend_historical": {
+      "psi": 0.0164,
+      "ks_statistic": 0.0367,
+      "ks_p_value": 0.187199,
+      "drift_detected": false
+    },
+    "monthly_to_historical_spend_ratio": {
+      "psi": 0.0059,
+      "ks_statistic": 0.0303,
+      "ks_p_value": 0.391064,
+      "drift_detected": false
+    },
+    "monthly_price_delta": {
+      "psi": 0.005,
+      "ks_statistic": 0.0282,
+      "ks_p_value": 0.48495,
+      "drift_detected": false
+    },
+    "total_addon_services": {
+      "psi": 0.0058,
+      "ks_statistic": 0.0238,
+      "ks_p_value": 0.695143,
+      "drift_detected": false
+    },
+    "charge_per_service": {
+      "psi": 0.0076,
+      "ks_statistic": 0.0235,
+      "ks_p_value": 0.713032,
+      "drift_detected": false
+    },
+    "protection_support_count": {
+      "psi": 0.001,
+      "ks_statistic": 0.0131,
+      "ks_p_value": 0.997859,
+      "drift_detected": false
+    },
+    "unprotected_fiber_flag": {
+      "psi": 0.0,
+      "ks_statistic": 0.0133,
+      "ks_p_value": 0.997421,
+      "drift_detected": false
+    },
+    "is_autopay": {
+      "psi": 0.0,
+      "ks_statistic": 0.0005,
+      "ks_p_value": 1.0,
+      "drift_detected": false
+    },
+    "gender_Male": {
+      "psi": 0.0,
+      "ks_statistic": 0.0058,
+      "ks_p_value": 1.0,
+      "drift_detected": false
+    },
+    "Partner_Yes": {
+      "psi": 0.0,
+      "ks_statistic": 0.0062,
+      "ks_p_value": 1.0,
+      "drift_detected": false
+    },
+    "Dependents_Yes": {
+      "psi": 0.0,
+      "ks_statistic": 0.0166,
+      "ks_p_value": 0.966281,
+      "drift_detected": false
+    },
+    "PhoneService_Yes": {
+      "psi": 0.0,
+      "ks_statistic": 0.0152,
+      "ks_p_value": 0.985728,
+      "drift_detected": false
+    },
+    "MultipleLines_No": {
+      "psi": 0.0,
+      "ks_statistic": 0.0328,
+      "ks_p_value": 0.297784,
+      "drift_detected": false
+    },
+    "MultipleLines_No phone service": {
+      "psi": 0.0,
+      "ks_statistic": 0.0152,
+      "ks_p_value": 0.985728,
+      "drift_detected": false
+    },
+    "MultipleLines_Yes": {
+      "psi": 0.0,
+      "ks_statistic": 0.0176,
+      "ks_p_value": 0.944724,
+      "drift_detected": false
+    },
+    "InternetService_DSL": {
+      "psi": 0.0,
+      "ks_statistic": 0.0064,
+      "ks_p_value": 1.0,
+      "drift_detected": false
+    },
+    "InternetService_Fiber optic": {
+      "psi": 0.0,
+      "ks_statistic": 0.0171,
+      "ks_p_value": 0.956342,
+      "drift_detected": false
+    },
+    "InternetService_No": {
+      "psi": 0.0,
+      "ks_statistic": 0.0107,
+      "ks_p_value": 0.999947,
+      "drift_detected": false
+    },
+    "OnlineSecurity_No": {
+      "psi": 0.0,
+      "ks_statistic": 0.0033,
+      "ks_p_value": 1.0,
+      "drift_detected": false
+    },
+    "OnlineSecurity_No internet service": {
+      "psi": 0.0,
+      "ks_statistic": 0.0107,
+      "ks_p_value": 0.999947,
+      "drift_detected": false
+    },
+    "OnlineSecurity_Yes": {
+      "psi": 0.0,
+      "ks_statistic": 0.0074,
+      "ks_p_value": 1.0,
+      "drift_detected": false
+    },
+    "OnlineBackup_No": {
+      "psi": 0.0,
+      "ks_statistic": 0.0232,
+      "ks_p_value": 0.72663,
+      "drift_detected": false
+    },
+    "OnlineBackup_No internet service": {
+      "psi": 0.0,
+      "ks_statistic": 0.0107,
+      "ks_p_value": 0.999947,
+      "drift_detected": false
+    },
+    "OnlineBackup_Yes": {
+      "psi": 0.0,
+      "ks_statistic": 0.0125,
+      "ks_p_value": 0.998971,
+      "drift_detected": false
+    },
+    "DeviceProtection_No": {
+      "psi": 0.0,
+      "ks_statistic": 0.0177,
+      "ks_p_value": 0.943909,
+      "drift_detected": false
+    },
+    "DeviceProtection_No internet service": {
+      "psi": 0.0,
+      "ks_statistic": 0.0107,
+      "ks_p_value": 0.999947,
+      "drift_detected": false
+    },
+    "DeviceProtection_Yes": {
+      "psi": 0.0,
+      "ks_statistic": 0.0069,
+      "ks_p_value": 1.0,
+      "drift_detected": false
+    },
+    "TechSupport_No": {
+      "psi": 0.0,
+      "ks_statistic": 0.0236,
+      "ks_p_value": 0.705476,
+      "drift_detected": false
+    },
+    "TechSupport_No internet service": {
+      "psi": 0.0,
+      "ks_statistic": 0.0107,
+      "ks_p_value": 0.999947,
+      "drift_detected": false
+    },
+    "TechSupport_Yes": {
+      "psi": 0.0,
+      "ks_statistic": 0.0129,
+      "ks_p_value": 0.998246,
+      "drift_detected": false
+    },
+    "StreamingTV_No": {
+      "psi": 0.0,
+      "ks_statistic": 0.0259,
+      "ks_p_value": 0.591462,
+      "drift_detected": false
+    },
+    "StreamingTV_No internet service": {
+      "psi": 0.0,
+      "ks_statistic": 0.0107,
+      "ks_p_value": 0.999947,
+      "drift_detected": false
+    },
+    "StreamingTV_Yes": {
+      "psi": 0.0,
+      "ks_statistic": 0.0152,
+      "ks_p_value": 0.985625,
+      "drift_detected": false
+    },
+    "StreamingMovies_No": {
+      "psi": 0.0,
+      "ks_statistic": 0.0206,
+      "ks_p_value": 0.845382,
+      "drift_detected": false
+    },
+    "StreamingMovies_No internet service": {
+      "psi": 0.0,
+      "ks_statistic": 0.0107,
+      "ks_p_value": 0.999947,
+      "drift_detected": false
+    },
+    "StreamingMovies_Yes": {
+      "psi": 0.0,
+      "ks_statistic": 0.0099,
+      "ks_p_value": 0.999992,
+      "drift_detected": false
+    },
+    "Contract_Month-to-month": {
+      "psi": 0.0,
+      "ks_statistic": 0.0022,
+      "ks_p_value": 1.0,
+      "drift_detected": false
+    },
+    "Contract_One year": {
+      "psi": 0.0,
+      "ks_statistic": 0.0046,
+      "ks_p_value": 1.0,
+      "drift_detected": false
+    },
+    "Contract_Two year": {
+      "psi": 0.0,
+      "ks_statistic": 0.0067,
+      "ks_p_value": 1.0,
+      "drift_detected": false
+    },
+    "PaperlessBilling_Yes": {
+      "psi": 0.0,
+      "ks_statistic": 0.0041,
+      "ks_p_value": 1.0,
+      "drift_detected": false
+    },
+    "PaymentMethod_Bank transfer (automatic)": {
+      "psi": 0.0,
+      "ks_statistic": 0.0067,
+      "ks_p_value": 1.0,
+      "drift_detected": false
+    },
+    "PaymentMethod_Credit card (automatic)": {
+      "psi": 0.0,
+      "ks_statistic": 0.0062,
+      "ks_p_value": 1.0,
+      "drift_detected": false
+    },
+    "PaymentMethod_Electronic check": {
+      "psi": 0.0,
+      "ks_statistic": 0.0066,
+      "ks_p_value": 1.0,
+      "drift_detected": false
+    },
+    "PaymentMethod_Mailed check": {
+      "psi": 0.0,
+      "ks_statistic": 0.0071,
+      "ks_p_value": 1.0,
+      "drift_detected": false
+    },
+    "tenure_cohort_0-6m_Onboarding": {
+      "psi": 0.0,
+      "ks_statistic": 0.0002,
+      "ks_p_value": 1.0,
+      "drift_detected": false
+    },
+    "tenure_cohort_13-24m_Growing": {
+      "psi": 0.0,
+      "ks_statistic": 0.0021,
+      "ks_p_value": 1.0,
+      "drift_detected": false
+    },
+    "tenure_cohort_25-48m_Established": {
+      "psi": 0.0,
+      "ks_statistic": 0.0031,
+      "ks_p_value": 1.0,
+      "drift_detected": false
+    },
+    "tenure_cohort_49m+_Loyal": {
+      "psi": 0.0,
+      "ks_statistic": 0.0017,
+      "ks_p_value": 1.0,
+      "drift_detected": false
+    },
+    "tenure_cohort_7-12m_Early": {
+      "psi": 0.0,
+      "ks_statistic": 0.0033,
+      "ks_p_value": 1.0,
+      "drift_detected": false
+    }
+  }
+}

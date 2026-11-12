@@ -1,0 +1,28 @@
+stages:
+  train_churn_retention_pipeline:
+    cmd: python -m pipelines.training_pipeline --stage all
+    deps:
+      - configs/config.yaml
+      - pipelines/training_pipeline.py
+      - src/churn_engine/data/ingestion.py
+      - src/churn_engine/data/validation.py
+      - src/churn_engine/data/eda.py
+      - src/churn_engine/features/preprocessor.py
+      - src/churn_engine/models/trainer.py
+      - src/churn_engine/models/evaluator.py
+      - src/churn_engine/retention/engine.py
+      - src/churn_engine/monitoring/drift.py
+    outs:
+      - data/raw/customer_churn.csv
+      - data/processed/train.parquet
+      - data/processed/val.parquet
+      - data/processed/test.parquet
+      - artifacts/models/preprocessor.joblib
+      - artifacts/models/champion_model.joblib
+    metrics:
+      - artifacts/reports/evaluation_metrics.json:
+          cache: false
+      - artifacts/reports/data_validation_report.json:
+          cache: false
+      - artifacts/reports/drift_report.json:
+          cache: false

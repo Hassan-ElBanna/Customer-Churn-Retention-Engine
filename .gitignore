@@ -1,0 +1,41 @@
+# Environment variables & secrets
+.env
+.env.*
+!.env.example
+.dvc/config.local
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+src/*.egg-info/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# DVC-tracked data & model artifacts (managed by DVC)
+/data/raw/customer_churn.csv
+/data/processed/train.parquet
+/data/processed/val.parquet
+/data/processed/test.parquet
+/artifacts/models/preprocessor.joblib
+/artifacts/models/champion_model.joblib
+
+# Local MLflow store
+mlruns/
+mlartifacts/
+mlflow.db
+
+# Testing & linting
+.pytest_cache/
+.coverage
+htmlcov/
+.ruff_cache/
+
+# IDE & OS
+.idea/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,72 @@
+project:
+  name: "customer-churn-retention-engine"
+  version: "0.1.0"
+  random_state: 42
+
+data:
+  dataset_url: "https://www.kaggle.com/datasets/blastchar/telco-customer-churn"
+  raw_data_path: "data/raw/customer_churn.csv"
+  processed_dir: "data/processed"
+  target_column: "Churn"
+  id_column: "customerID"
+  test_size: 0.15
+  val_size: 0.15
+  min_rows: 50
+  max_missing_ratio: 0.40
+
+features:
+  numerical_impute_strategy: "median"
+  categorical_impute_strategy: "most_frequent"
+  scaling_method: "standard"
+  max_categorical_cardinality: 50
+
+training:
+  experiment_name: "customer_churn_retention"
+  mlflow_tracking_uri: "sqlite:///mlflow.db"
+  dagshub_repo_owner: ""   # Optional: set here or via DAGSHUB_REPO_OWNER in .env
+  dagshub_repo_name: ""    # Optional: set here or via DAGSHUB_REPO_NAME in .env
+  primary_metric: "roc_auc"
+  business_cost_fn: 300.0   # Cost of False Negative (expected LTV loss of missed churner)
+  business_cost_fp: 75.0    # Cost of False Positive (retention incentive + outreach cost)
+  models:
+    logistic_regression:
+      enabled: true
+      params:
+        C: 1.0
+        max_iter: 1000
+        class_weight: "balanced"
+    random_forest:
+      enabled: true
+      params:
+        n_estimators: 200
+        max_depth: 10
+        min_samples_split: 5
+        class_weight: "balanced"
+    xgboost:
+      enabled: true
+      params:
+        n_estimators: 300
+        learning_rate: 0.05
+        max_depth: 6
+        subsample: 0.8
+        colsample_bytree: 0.8
+        eval_metric: "logloss"
+
+retention:
+  risk_thresholds:
+    low: 0.30
+    medium: 0.60
+    high: 0.80
+  default_annual_revenue: 1200.0
+  max_offer_budget_ratio: 0.25
+
+monitoring:
+  psi_threshold: 0.20
+  ks_alpha: 0.05
+  reference_data_path: "data/processed/reference_profile.json"
+  drift_report_path: "artifacts/reports/drift_report.json"
+
+artifacts:
+  model_dir: "artifacts/models"
+  reports_dir: "artifacts/reports"
+

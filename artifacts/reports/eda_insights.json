@@ -1,0 +1,245 @@
+{
+  "dataset_overview": {
+    "total_rows": 7043,
+    "total_columns": 21,
+    "churned_customers": 1869,
+    "retained_customers": 5174,
+    "overall_churn_rate_pct": 26.54,
+    "total_monthly_recurring_revenue": 456116.6,
+    "churned_monthly_recurring_revenue": 139130.85,
+    "annualized_revenue_lost": 1669570.2,
+    "mrr_lost_pct": 30.5
+  },
+  "anomalies_and_missing_values": {
+    "blank_total_charges_count": 11,
+    "all_blank_total_charges_have_zero_tenure": true,
+    "blank_total_charges_records": [
+      {
+        "customerID": "4472-LVYGI",
+        "tenure": 0,
+        "MonthlyCharges": 52.55,
+        "Contract": "Two year",
+        "Churn": "No"
+      },
+      {
+        "customerID": "3115-CZMZD",
+        "tenure": 0,
+        "MonthlyCharges": 20.25,
+        "Contract": "Two year",
+        "Churn": "No"
+      },
+      {
+        "customerID": "5709-LVOEQ",
+        "tenure": 0,
+        "MonthlyCharges": 80.85,
+        "Contract": "Two year",
+        "Churn": "No"
+      },
+      {
+        "customerID": "4367-NUYAO",
+        "tenure": 0,
+        "MonthlyCharges": 25.75,
+        "Contract": "Two year",
+        "Churn": "No"
+      },
+      {
+        "customerID": "1371-DWPAZ",
+        "tenure": 0,
+        "MonthlyCharges": 56.05,
+        "Contract": "Two year",
+        "Churn": "No"
+      },
+      {
+        "customerID": "7644-OMVMY",
+        "tenure": 0,
+        "MonthlyCharges": 19.85,
+        "Contract": "Two year",
+        "Churn": "No"
+      },
+      {
+        "customerID": "3213-VVOLG",
+        "tenure": 0,
+        "MonthlyCharges": 25.35,
+        "Contract": "Two year",
+        "Churn": "No"
+      },
+      {
+        "customerID": "2520-SGTTA",
+        "tenure": 0,
+        "MonthlyCharges": 20.0,
+        "Contract": "Two year",
+        "Churn": "No"
+      },
+      {
+        "customerID": "2923-ARZLG",
+        "tenure": 0,
+        "MonthlyCharges": 19.7,
+        "Contract": "One year",
+        "Churn": "No"
+      },
+      {
+        "customerID": "4075-WKNIU",
+        "tenure": 0,
+        "MonthlyCharges": 73.35,
+        "Contract": "Two year",
+        "Churn": "No"
+      },
+      {
+        "customerID": "2775-SEFEE",
+        "tenure": 0,
+        "MonthlyCharges": 61.9,
+        "Contract": "Two year",
+        "Churn": "No"
+      }
+    ]
+  },
+  "numerical_summary_by_churn": {
+    "retained": {
+      "median_tenure": 38.0,
+      "mean_tenure": 37.57,
+      "median_monthly_charges": 64.43,
+      "mean_monthly_charges": 61.27
+    },
+    "churned": {
+      "median_tenure": 10.0,
+      "mean_tenure": 17.98,
+      "median_monthly_charges": 79.65,
+      "mean_monthly_charges": 74.44
+    }
+  },
+  "segment_breakdowns": {
+    "by_contract": [
+      {
+        "Contract": "Month-to-month",
+        "customers": 3875,
+        "churn_rate": 42.71,
+        "avg_monthly_charges": 66.4,
+        "mrr_at_risk": 120847.1
+      },
+      {
+        "Contract": "One year",
+        "customers": 1473,
+        "churn_rate": 11.27,
+        "avg_monthly_charges": 65.05,
+        "mrr_at_risk": 14118.45
+      },
+      {
+        "Contract": "Two year",
+        "customers": 1695,
+        "churn_rate": 2.83,
+        "avg_monthly_charges": 60.77,
+        "mrr_at_risk": 4165.3
+      }
+    ],
+    "by_internet_service": [
+      {
+        "InternetService": "DSL",
+        "customers": 2421,
+        "churn_rate": 18.96,
+        "avg_monthly_charges": 58.1,
+        "mrr_at_risk": 22529.2
+      },
+      {
+        "InternetService": "Fiber optic",
+        "customers": 3096,
+        "churn_rate": 41.89,
+        "avg_monthly_charges": 91.5,
+        "mrr_at_risk": 114300.05
+      },
+      {
+        "InternetService": "No",
+        "customers": 1526,
+        "churn_rate": 7.4,
+        "avg_monthly_charges": 21.08,
+        "mrr_at_risk": 2301.6
+      }
+    ],
+    "by_payment_method": [
+      {
+        "PaymentMethod": "Bank transfer (automatic)",
+        "customers": 1544,
+        "churn_rate": 16.71,
+        "avg_monthly_charges": 67.19,
+        "mrr_at_risk": 20091.9
+      },
+      {
+        "PaymentMethod": "Credit card (automatic)",
+        "customers": 1522,
+        "churn_rate": 15.24,
+        "avg_monthly_charges": 66.51,
+        "mrr_at_risk": 17946.6
+      },
+      {
+        "PaymentMethod": "Electronic check",
+        "customers": 2365,
+        "churn_rate": 45.29,
+        "avg_monthly_charges": 76.26,
+        "mrr_at_risk": 84288.75
+      },
+      {
+        "PaymentMethod": "Mailed check",
+        "customers": 1612,
+        "churn_rate": 19.11,
+        "avg_monthly_charges": 43.92,
+        "mrr_at_risk": 16803.6
+      }
+    ],
+    "by_tenure_cohort": [
+      {
+        "Tenure_Cohort": "0-6m (Onboarding)",
+        "customers": 1481,
+        "churn_rate": 52.94,
+        "avg_monthly_charges": 54.74,
+        "mrr_at_risk": 49896.1
+      },
+      {
+        "Tenure_Cohort": "7-12m",
+        "customers": 705,
+        "churn_rate": 35.89,
+        "avg_monthly_charges": 58.95,
+        "mrr_at_risk": 19058.15
+      },
+      {
+        "Tenure_Cohort": "13-24m",
+        "customers": 1024,
+        "churn_rate": 28.71,
+        "avg_monthly_charges": 61.36,
+        "mrr_at_risk": 23081.65
+      },
+      {
+        "Tenure_Cohort": "25-48m",
+        "customers": 1594,
+        "churn_rate": 20.39,
+        "avg_monthly_charges": 65.93,
+        "mrr_at_risk": 27462.5
+      },
+      {
+        "Tenure_Cohort": "49-72m (Loyal)",
+        "customers": 2239,
+        "churn_rate": 9.51,
+        "avg_monthly_charges": 73.95,
+        "mrr_at_risk": 19632.45
+      }
+    ],
+    "by_senior_citizen": [
+      {
+        "SeniorCitizen": 0,
+        "customers": 5901,
+        "churn_rate": 23.61,
+        "avg_monthly_charges": 61.85,
+        "mrr_at_risk": 100711.25
+      },
+      {
+        "SeniorCitizen": 1,
+        "customers": 1142,
+        "churn_rate": 41.68,
+        "avg_monthly_charges": 79.82,
+        "mrr_at_risk": 38419.6
+      }
+    ],
+    "unprotected_fiber_optic": {
+      "customer_count": 1765,
+      "churn_rate_pct": 55.01
+    }
+  }
+}
