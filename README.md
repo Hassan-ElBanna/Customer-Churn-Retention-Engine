@@ -70,9 +70,13 @@ python -m pipelines.training_pipeline --url "<YOUR_DATASET_DOWNLOAD_LINK>"
 pytest
 ```
 
-### 3. Start the Prediction & Retention API
+### 3. Start the Interactive Streamlit Frontend or FastAPI Service
 ```bash
-uvicorn churn_engine.api.main:app --reload --port 8000
+# Launch the Streamlit Customer Churn & Retention Command Center (http://localhost:8501)
+.\.venv\Scripts\python.exe -m streamlit run app/streamlit_app.py
+
+# Or start the FastAPI REST API (http://localhost:8000/docs)
+.\.venv\Scripts\python.exe -m uvicorn churn_engine.api.main:app --reload --port 8000
 ```
 
 ### 4. Link GitHub, DVC & MLflow with DagsHub

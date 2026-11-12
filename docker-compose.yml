@@ -18,6 +18,22 @@ services:
       - mlflow
     restart: unless-stopped
 
+  streamlit-ui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: churn-retention-ui
+    command: ["streamlit", "run", "app/streamlit_app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./app:/app/app
+      - ./artifacts:/app/artifacts
+      - ./data:/app/data
+    depends_on:
+      - churn-api
+    restart: unless-stopped
+
   mlflow:
     image: ghcr.io/mlflow/mlflow:v2.10.2
     container_name: churn-mlflow-server
