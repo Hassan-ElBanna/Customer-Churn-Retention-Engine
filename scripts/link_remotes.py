@@ -37,9 +37,8 @@ def configure_remotes(
     repo = dagshub_repo or os.getenv("DAGSHUB_REPO_NAME", "").strip()
     token = dagshub_token or os.getenv("DAGSHUB_USER_TOKEN", "").strip()
 
-    # Determine DVC executable inside .venv
-    venv_dvc = Path(".venv/Scripts/dvc.exe")
-    dvc_bin = str(venv_dvc) if venv_dvc.exists() else "dvc"
+    # Invoke DVC via the active Python interpreter (`python -m dvc`)
+    dvc_cmd = [sys.executable, "-m", "dvc"]
 
     # 1. Configure Git Remote
     if github_url:
@@ -57,14 +56,14 @@ def configure_remotes(
         dvc_url = f"https://dagshub.com/{owner}/{repo}.dvc"
         mlflow_url = f"https://dagshub.com/{owner}/{repo}.mlflow"
 
-        run_cmd([dvc_bin, "remote", "add", "-d", "-f", "origin", dvc_url])
-        run_cmd([dvc_bin, "remote", "modify", "origin", "auth", "basic"])
-        run_cmd([dvc_bin, "remote", "modify", "origin", "user", owner])
+        run_cmd([*dvc_cmd, "remote", "add", "-d", "-f", "origin", dvc_url])
+        run_cmd([*dvc_cmd, "remote", "modify", "origin", "auth", "basic"])
+        run_cmd([*dvc_cmd, "remote", "modify", "origin", "user", owner])
 
         if token:
             # Stored in .dvc/config.local (automatically git-ignored by DVC)
             run_cmd(
-                [dvc_bin, "remote", "modify", "--local", "origin", "password", token],
+                [*dvc_cmd, "remote", "modify", "--local", "origin", "password", token],
                 mask_tokens=[token],
             )
 
@@ -91,7 +90,7 @@ def configure_remotes(
             run_cmd(["git", "branch", "-M", "main"])
             run_cmd(["git", "push", "-u", "origin", "main"])
         if owner and repo and token:
-            run_cmd([dvc_bin, "push", "-r", "origin"])
+            run_cmd([*dvc_cmd, "push", "-r", "origin"])
 
 
 if __name__ == "__main__":
