@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
-    "api/index.py": {
+    "src/churn_engine/api/main.py": {
       "maxDuration": 30,
       "includeFiles": "{artifacts/models/**,artifacts/reports/evaluation_metrics.json,artifacts/reports/monitoring_actions.json,artifacts/reports/drift_report.json,configs/**,src/**}",
       "excludeFiles": "{data/**,tests/**,app/**,mlruns/**,monitoring/**,.venv/**,artifacts/reports/figures/**,artifacts/reports/evidently_drift_report.html}"

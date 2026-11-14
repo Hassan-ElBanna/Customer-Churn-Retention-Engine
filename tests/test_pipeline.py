@@ -299,7 +299,7 @@ def test_api_prometheus_metrics_and_monitoring_endpoints(tmp_path, monkeypatch):
 
 
 def test_vercel_entrypoint_exports_fastapi_app():
-    from api.index import app as vercel_app
+    from src.churn_engine.api.main import app as vercel_app
 
     vercel_client = TestClient(vercel_app)
     res = vercel_client.get("/health")

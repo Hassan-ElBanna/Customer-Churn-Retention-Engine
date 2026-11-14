@@ -1,6 +1,5 @@
 """Comprehensive Exploratory Data Analysis (EDA) & MLOps Visualization Generator."""
 
-import json
 from pathlib import Path
 from typing import Any, Dict
 import matplotlib
@@ -509,7 +508,6 @@ class ChurnEDAAnalyzer:
         for name, model in trained_models.items():
             probs = model.predict_proba(X_val)[:, 1]
             prec, rec, _ = precision_recall_curve(y_val, probs)
-            from sklearn.metrics import average_precision_score
 
             ap_val = average_precision_score(y_val, probs)
             axes[0, 1].plot(

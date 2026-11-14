@@ -35,8 +35,6 @@ A production-ready Machine Learning Operations (MLOps) system that predicts cust
 ├── .github/workflows/
 │   ├── mlops_ci.yml               # CI linting & automated test workflow
 │   └── cd_vercel.yml              # Continuous Deployment to Vercel (CI gate -> DVC/retrain -> deploy -> smoke test)
-├── api/
-│   └── index.py                   # Vercel Python Serverless entrypoint exposing FastAPI app
 ├── app/
 │   └── streamlit_app.py             # Interactive Streamlit Command Center & Evidently audit UI
 ├── public/
@@ -55,7 +53,8 @@ A production-ready Machine Learning Operations (MLOps) system that predicts cust
 │   └── training_pipeline.py         # End-to-end MLOps pipeline entrypoint
 ├── scripts/
 │   ├── link_remotes.py              # GitHub, DVC & DagsHub MLflow linking helper
-│   └── monitor_and_act.py           # CLI batch drift audit & automated retraining runner
+│   ├── monitor_and_act.py           # CLI batch drift audit & automated retraining runner
+│   └── vercel_build.py              # Vercel build hook ensuring runtime-compatible artifacts
 ├── src/churn_engine/
 │   ├── api/                         # FastAPI serving app, /metrics & Pydantic schemas
 │   ├── data/                        # DataIngestor, DataValidator & ChurnEDAAnalyzer
@@ -132,7 +131,7 @@ docker compose up --build
 
 ### 6. Continuous Deployment (CD) on Vercel
 
-The repository includes a serverless Vercel deployment ([api/index.py](api/index.py), [public/index.html](public/index.html), [vercel.json](vercel.json)) and an automated GitHub Actions CD pipeline ([.github/workflows/cd_vercel.yml](.github/workflows/cd_vercel.yml)) that runs CI (`ruff` + `pytest`), pulls/verifies model artifacts on Python 3.12, deploys to Vercel production, and smoke-tests `/health` and `/predict`.
+The repository deploys as a Vercel FastAPI project configured via `[tool.vercel].entrypoint = "src.churn_engine.api.main:app"` in [pyproject.toml](pyproject.toml), [public/index.html](public/index.html), [scripts/vercel_build.py](scripts/vercel_build.py), and [vercel.json](vercel.json), alongside an automated GitHub Actions CD pipeline ([.github/workflows/cd_vercel.yml](.github/workflows/cd_vercel.yml)) that runs CI (`ruff` + `pytest`), pulls/verifies model artifacts on Python 3.12, deploys to Vercel production, and smoke-tests `/health` and `/predict`.
 
 > **Note:** Vercel Serverless Functions run stateless FastAPI inference + the CDN web UI (`/`), whereas the stateful Streamlit dashboard (`app/streamlit_app.py`) runs via Docker Compose or Streamlit Community Cloud.
 

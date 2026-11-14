@@ -25,7 +25,7 @@ jobs:
           pip install -e ".[ml,dev]"
 
       - name: Run Ruff Linter
-        run: ruff check src/ pipelines/ tests/ api/
+        run: ruff check src/ pipelines/ tests/ scripts/vercel_build.py
 
       - name: Run Unit & Integration Tests
         run: pytest tests/ -v --cov=src/churn_engine --cov-report=term-missing

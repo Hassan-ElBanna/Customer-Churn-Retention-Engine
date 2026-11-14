@@ -2,33 +2,39 @@
 
 import json
 import os
-from pathlib import Path
+import sys
 import time
+from pathlib import Path
 from typing import Any, Dict, List
+
 import joblib
 import pandas as pd
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, JSONResponse, Response
 from prometheus_client import (
     CONTENT_TYPE_LATEST,
+    REGISTRY,
     Counter,
     Gauge,
     Histogram,
     generate_latest,
 )
 
-from churn_engine.api.schemas import (
+ROOT_DIR = Path(__file__).resolve().parents[3]
+SRC_DIR = ROOT_DIR / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+
+from churn_engine.api.schemas import (  # noqa: E402
     BatchCustomerPayload,
     CustomerPayload,
     RetentionResponse,
 )
-from churn_engine.features.preprocessor import ChurnFeaturePreprocessor
-from churn_engine.retention.engine import RetentionEngine
-from churn_engine.utils.logger import get_logger
+from churn_engine.features.preprocessor import ChurnFeaturePreprocessor  # noqa: E402
+from churn_engine.retention.engine import RetentionEngine  # noqa: E402
+from churn_engine.utils.logger import get_logger  # noqa: E402
 
 logger = get_logger(__name__)
-
-ROOT_DIR = Path(__file__).resolve().parents[3]
 
 
 def _resolve_path(env_key: str, default_rel: str) -> Path:
@@ -56,38 +62,57 @@ EVIDENTLY_HTML_PATH = _resolve_path(
 REFERENCE_DATA_PATH = _resolve_path("REFERENCE_DATA_PATH", "data/raw/customer_churn.csv")
 PUBLIC_INDEX_PATH = ROOT_DIR / "public" / "index.html"
 
-PREDICTION_COUNTER = Counter(
+def _get_or_create_metric(metric_cls: Any, name: str, documentation: str, *args: Any, **kwargs: Any) -> Any:
+    """Return an existing Prometheus collector or create one without duplicate-registry errors."""
+    existing = (
+        REGISTRY._names_to_collectors.get(name)
+        or REGISTRY._names_to_collectors.get(name.removesuffix("_total"))
+    )
+    if existing is not None:
+        return existing
+    return metric_cls(name, documentation, *args, **kwargs)
+
+
+PREDICTION_COUNTER = _get_or_create_metric(
+    Counter,
     "churn_predictions_total",
     "Total customer churn predictions served",
     ["endpoint", "risk_tier", "will_churn"],
 )
-PREDICTION_LATENCY = Histogram(
+PREDICTION_LATENCY = _get_or_create_metric(
+    Histogram,
     "churn_prediction_latency_seconds",
     "Churn prediction latency in seconds",
     ["endpoint"],
 )
-PREDICTION_PROBABILITY = Histogram(
+PREDICTION_PROBABILITY = _get_or_create_metric(
+    Histogram,
     "churn_predicted_probability",
     "Distribution of predicted churn probabilities",
     buckets=(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0),
 )
-MODEL_LOADED_GAUGE = Gauge(
+MODEL_LOADED_GAUGE = _get_or_create_metric(
+    Gauge,
     "churn_model_loaded",
     "Whether champion model and preprocessor are loaded (1=yes, 0=no)",
 )
-DRIFT_FEATURES_GAUGE = Gauge(
+DRIFT_FEATURES_GAUGE = _get_or_create_metric(
+    Gauge,
     "churn_drift_detected_features",
     "Count of drifted columns reported by the latest Evidently monitoring check",
 )
-DRIFT_SHARE_GAUGE = Gauge(
+DRIFT_SHARE_GAUGE = _get_or_create_metric(
+    Gauge,
     "churn_drift_share",
     "Share of drifted columns (0.0-1.0) reported by Evidently monitoring",
 )
-RETRAIN_RECOMMENDED_GAUGE = Gauge(
+RETRAIN_RECOMMENDED_GAUGE = _get_or_create_metric(
+    Gauge,
     "churn_retrain_recommended",
     "Whether monitoring triggered a retraining recommendation (1=yes, 0=no)",
 )
-MONITORING_SEVERITY_GAUGE = Gauge(
+MONITORING_SEVERITY_GAUGE = _get_or_create_metric(
+    Gauge,
     "churn_monitoring_alert_severity",
     "Monitoring alert severity level (0=OK, 1=WARNING, 2=CRITICAL)",
 )
