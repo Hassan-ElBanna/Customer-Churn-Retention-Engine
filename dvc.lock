@@ -5,12 +5,12 @@ stages:
     deps:
     - path: configs/config.yaml
       hash: md5
-      md5: e87f0cc80a5da9c82eba7397156c5386
-      size: 1904
+      md5: 3764ebfaab408db36aec5be864cc2588
+      size: 2259
     - path: pipelines/training_pipeline.py
       hash: md5
-      md5: 01f116cf5fc125689189cbe3ae37632f
-      size: 9522
+      md5: 01626dc8ebd226d4ccf229d2079de82a
+      size: 11674
     - path: src/churn_engine/data/eda.py
       hash: md5
       md5: 58aa8cdf67a1a7677070c63cdade416e
@@ -39,6 +39,10 @@ stages:
       hash: md5
       md5: def613b4882aae7aba96ab94ab6572be
       size: 3912
+    - path: src/churn_engine/monitoring/evidently_monitor.py
+      hash: md5
+      md5: 1fcf74e84ea62171f942a9547f0da586
+      size: 25171
     - path: src/churn_engine/retention/engine.py
       hash: md5
       md5: e69296ac75fea8a586fe354fe62dab14
@@ -64,6 +68,14 @@ stages:
       hash: md5
       md5: 214ba32a17041fa909bd2be9b8811091
       size: 7923
+    - path: artifacts/reports/evidently_drift_report.html
+      hash: md5
+      md5: ec10788d3898cc240a650a6e00b2aa00
+      size: 5744736
+    - path: artifacts/reports/monitoring_actions.json
+      hash: md5
+      md5: 3d3f1af1373b492889fd5849c32a80f7
+      size: 857
     - path: data/processed/test.parquet
       hash: md5
       md5: cd442a387a95f51fedb65565e3a311d6

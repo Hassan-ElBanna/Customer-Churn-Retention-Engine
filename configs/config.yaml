@@ -62,9 +62,17 @@ retention:
 
 monitoring:
   psi_threshold: 0.20
+  severe_psi_threshold: 0.35
   ks_alpha: 0.05
+  drift_share_threshold: 0.25
+  min_accuracy_threshold: 0.75
+  min_roc_auc_threshold: 0.78
+  auto_retrain_on_drift: false
   reference_data_path: "data/processed/reference_profile.json"
   drift_report_path: "artifacts/reports/drift_report.json"
+  evidently_html_path: "artifacts/reports/evidently_drift_report.html"
+  evidently_json_path: "artifacts/reports/evidently_summary.json"
+  actions_report_path: "artifacts/reports/monitoring_actions.json"
 
 artifacts:
   model_dir: "artifacts/models"

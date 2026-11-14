@@ -1,0 +1,357 @@
+{
+  "num_columns_checked": 34,
+  "num_drifted_columns": 0,
+  "drift_share": 0.0,
+  "drifted_columns": [],
+  "column_drift_scores": {
+    "SeniorCitizen": 0.0,
+    "tenure": 0.0156,
+    "MonthlyCharges": 0.029,
+    "TotalCharges": 0.0123,
+    "avg_monthly_spend_historical": 0.0217,
+    "monthly_to_historical_spend_ratio": 0.0214,
+    "monthly_price_delta": 0.0155,
+    "total_addon_services": 0.0069,
+    "charge_per_service": 0.03,
+    "protection_support_count": 0.0049,
+    "unprotected_fiber_flag": 0.0009,
+    "is_autopay": 0.0,
+    "tenure_log": 0.0118,
+    "tenure_squared": 0.0204,
+    "monthly_charges_to_tenure_ratio": 0.006,
+    "contract_term_months": 0.0003,
+    "committed_contract_value": 0.0085,
+    "high_risk_triad_flag": 0.0,
+    "gender": 0.0041,
+    "Partner": 0.0044,
+    "Dependents": 0.0127,
+    "PhoneService": 0.0186,
+    "MultipleLines": 0.0261,
+    "InternetService": 0.0128,
+    "OnlineSecurity": 0.0097,
+    "OnlineBackup": 0.0166,
+    "DeviceProtection": 0.0131,
+    "TechSupport": 0.0167,
+    "StreamingTV": 0.0187,
+    "StreamingMovies": 0.0152,
+    "Contract": 0.0061,
+    "PaperlessBilling": 0.0029,
+    "PaymentMethod": 0.0096,
+    "tenure_cohort": 0.0049
+  },
+  "psi_drift_scores": {
+    "SeniorCitizen": 0.0,
+    "tenure": 0.0156,
+    "MonthlyCharges": 0.029,
+    "TotalCharges": 0.0123,
+    "avg_monthly_spend_historical": 0.0217,
+    "monthly_to_historical_spend_ratio": 0.0214,
+    "monthly_price_delta": 0.0155,
+    "total_addon_services": 0.0069,
+    "charge_per_service": 0.03,
+    "protection_support_count": 0.0049,
+    "unprotected_fiber_flag": 0.0009,
+    "is_autopay": 0.0,
+    "tenure_log": 0.0118,
+    "tenure_squared": 0.0204,
+    "monthly_charges_to_tenure_ratio": 0.006,
+    "contract_term_months": 0.0003,
+    "committed_contract_value": 0.0085,
+    "high_risk_triad_flag": 0.0
+  },
+  "classification_metrics": {
+    "accuracy": 0.8042,
+    "precision": 0.6652,
+    "recall": 0.525,
+    "f1": 0.5868,
+    "roc_auc": 0.853
+  },
+  "tests_total": 37,
+  "tests_passed": 37,
+  "tests_failed": 0,
+  "failed_tests": [],
+  "tests": [
+    {
+      "id": "lt",
+      "name": "Share of Drifted Columns: Less 0.250",
+      "description": "Share of Drifted Columns: Actual value 0.000 < 0.250",
+      "status": "SUCCESS",
+      "column": null
+    },
+    {
+      "id": "drift",
+      "name": "Value Drift for column SeniorCitizen",
+      "description": "Drift score is 0.00. The drift detection method is PSI. The drift threshold is 0.20.",
+      "status": "SUCCESS",
+      "column": "SeniorCitizen"
+    },
+    {
+      "id": "drift",
+      "name": "Value Drift for column tenure",
+      "description": "Drift score is 0.02. The drift detection method is PSI. The drift threshold is 0.20.",
+      "status": "SUCCESS",
+      "column": "tenure"
+    },
+    {
+      "id": "drift",
+      "name": "Value Drift for column MonthlyCharges",
+      "description": "Drift score is 0.03. The drift detection method is PSI. The drift threshold is 0.20.",
+      "status": "SUCCESS",
+      "column": "MonthlyCharges"
+    },
+    {
+      "id": "drift",
+      "name": "Value Drift for column TotalCharges",
+      "description": "Drift score is 0.01. The drift detection method is PSI. The drift threshold is 0.20.",
+      "status": "SUCCESS",
+      "column": "TotalCharges"
+    },
+    {
+      "id": "drift",
+      "name": "Value Drift for column avg_monthly_spend_historical",
+      "description": "Drift score is 0.02. The drift detection method is PSI. The drift threshold is 0.20.",
+      "status": "SUCCESS",
+      "column": "avg_monthly_spend_historical"
+    },
+    {
+      "id": "drift",
+      "name": "Value Drift for column monthly_to_historical_spend_ratio",
+      "description": "Drift score is 0.02. The drift detection method is PSI. The drift threshold is 0.20.",
+      "status": "SUCCESS",
+      "column": "monthly_to_historical_spend_ratio"
+    },
+    {
+      "id": "drift",
+      "name": "Value Drift for column monthly_price_delta",
+      "description": "Drift score is 0.02. The drift detection method is PSI. The drift threshold is 0.20.",
+      "status": "SUCCESS",
+      "column": "monthly_price_delta"
+    },
+    {
+      "id": "drift",
+      "name": "Value Drift for column total_addon_services",
+      "description": "Drift score is 0.01. The drift detection method is PSI. The drift threshold is 0.20.",
+      "status": "SUCCESS",
+      "column": "total_addon_services"
+    },
+    {
+      "id": "drift",
+      "name": "Value Drift for column charge_per_service",
+      "description": "Drift score is 0.03. The drift detection method is PSI. The drift threshold is 0.20.",
+      "status": "SUCCESS",
+      "column": "charge_per_service"
+    },
+    {
+      "id": "drift",
+      "name": "Value Drift for column protection_support_count",
+      "description": "Drift score is 0.00. The drift detection method is PSI. The drift threshold is 0.20.",
+      "status": "SUCCESS",
+      "column": "protection_support_count"
+    },
+    {
+      "id": "drift",
+      "name": "Value Drift for column unprotected_fiber_flag",
+      "description": "Drift score is 0.00. The drift detection method is PSI. The drift threshold is 0.20.",
+      "status": "SUCCESS",
+      "column": "unprotected_fiber_flag"
+    },
+    {
+      "id": "drift",
+      "name": "Value Drift for column is_autopay",
+      "description": "Drift score is 0.00. The drift detection method is PSI. The drift threshold is 0.20.",
+      "status": "SUCCESS",
+      "column": "is_autopay"
+    },
+    {
+      "id": "drift",
+      "name": "Value Drift for column tenure_log",
+      "description": "Drift score is 0.01. The drift detection method is PSI. The drift threshold is 0.20.",
+      "status": "SUCCESS",
+      "column": "tenure_log"
+    },
+    {
+      "id": "drift",
+      "name": "Value Drift for column tenure_squared",
+      "description": "Drift score is 0.02. The drift detection method is PSI. The drift threshold is 0.20.",
+      "status": "SUCCESS",
+      "column": "tenure_squared"
+    },
+    {
+      "id": "drift",
+      "name": "Value Drift for column monthly_charges_to_tenure_ratio",
+      "description": "Drift score is 0.01. The drift detection method is PSI. The drift threshold is 0.20.",
+      "status": "SUCCESS",
+      "column": "monthly_charges_to_tenure_ratio"
+    },
+    {
+      "id": "drift",
+      "name": "Value Drift for column contract_term_months",
+      "description": "Drift score is 0.00. The drift detection method is PSI. The drift threshold is 0.20.",
+      "status": "SUCCESS",
+      "column": "contract_term_months"
+    },
+    {
+      "id": "drift",
+      "name": "Value Drift for column committed_contract_value",
+      "description": "Drift score is 0.01. The drift detection method is PSI. The drift threshold is 0.20.",
+      "status": "SUCCESS",
+      "column": "committed_contract_value"
+    },
+    {
+      "id": "drift",
+      "name": "Value Drift for column high_risk_triad_flag",
+      "description": "Drift score is 0.00. The drift detection method is PSI. The drift threshold is 0.20.",
+      "status": "SUCCESS",
+      "column": "high_risk_triad_flag"
+    },
+    {
+      "id": "drift",
+      "name": "Value Drift for column gender",
+      "description": "Drift score is 0.00. The drift detection method is Jensen-Shannon distance. The drift threshold is 0.10.",
+      "status": "SUCCESS",
+      "column": "gender"
+    },
+    {
+      "id": "drift",
+      "name": "Value Drift for column Partner",
+      "description": "Drift score is 0.00. The drift detection method is Jensen-Shannon distance. The drift threshold is 0.10.",
+      "status": "SUCCESS",
+      "column": "Partner"
+    },
+    {
+      "id": "drift",
+      "name": "Value Drift for column Dependents",
+      "description": "Drift score is 0.01. The drift detection method is Jensen-Shannon distance. The drift threshold is 0.10.",
+      "status": "SUCCESS",
+      "column": "Dependents"
+    },
+    {
+      "id": "drift",
+      "name": "Value Drift for column PhoneService",
+      "description": "Drift score is 0.02. The drift detection method is Jensen-Shannon distance. The drift threshold is 0.10.",
+      "status": "SUCCESS",
+      "column": "PhoneService"
+    },
+    {
+      "id": "drift",
+      "name": "Value Drift for column MultipleLines",
+      "description": "Drift score is 0.03. The drift detection method is Jensen-Shannon distance. The drift threshold is 0.10.",
+      "status": "SUCCESS",
+      "column": "MultipleLines"
+    },
+    {
+      "id": "drift",
+      "name": "Value Drift for column InternetService",
+      "description": "Drift score is 0.01. The drift detection method is Jensen-Shannon distance. The drift threshold is 0.10.",
+      "status": "SUCCESS",
+      "column": "InternetService"
+    },
+    {
+      "id": "drift",
+      "name": "Value Drift for column OnlineSecurity",
+      "description": "Drift score is 0.01. The drift detection method is Jensen-Shannon distance. The drift threshold is 0.10.",
+      "status": "SUCCESS",
+      "column": "OnlineSecurity"
+    },
+    {
+      "id": "drift",
+      "name": "Value Drift for column OnlineBackup",
+      "description": "Drift score is 0.02. The drift detection method is Jensen-Shannon distance. The drift threshold is 0.10.",
+      "status": "SUCCESS",
+      "column": "OnlineBackup"
+    },
+    {
+      "id": "drift",
+      "name": "Value Drift for column DeviceProtection",
+      "description": "Drift score is 0.01. The drift detection method is Jensen-Shannon distance. The drift threshold is 0.10.",
+      "status": "SUCCESS",
+      "column": "DeviceProtection"
+    },
+    {
+      "id": "drift",
+      "name": "Value Drift for column TechSupport",
+      "description": "Drift score is 0.02. The drift detection method is Jensen-Shannon distance. The drift threshold is 0.10.",
+      "status": "SUCCESS",
+      "column": "TechSupport"
+    },
+    {
+      "id": "drift",
+      "name": "Value Drift for column StreamingTV",
+      "description": "Drift score is 0.02. The drift detection method is Jensen-Shannon distance. The drift threshold is 0.10.",
+      "status": "SUCCESS",
+      "column": "StreamingTV"
+    },
+    {
+      "id": "drift",
+      "name": "Value Drift for column StreamingMovies",
+      "description": "Drift score is 0.02. The drift detection method is Jensen-Shannon distance. The drift threshold is 0.10.",
+      "status": "SUCCESS",
+      "column": "StreamingMovies"
+    },
+    {
+      "id": "drift",
+      "name": "Value Drift for column Contract",
+      "description": "Drift score is 0.01. The drift detection method is Jensen-Shannon distance. The drift threshold is 0.10.",
+      "status": "SUCCESS",
+      "column": "Contract"
+    },
+    {
+      "id": "drift",
+      "name": "Value Drift for column PaperlessBilling",
+      "description": "Drift score is 0.00. The drift detection method is Jensen-Shannon distance. The drift threshold is 0.10.",
+      "status": "SUCCESS",
+      "column": "PaperlessBilling"
+    },
+    {
+      "id": "drift",
+      "name": "Value Drift for column PaymentMethod",
+      "description": "Drift score is 0.01. The drift detection method is Jensen-Shannon distance. The drift threshold is 0.10.",
+      "status": "SUCCESS",
+      "column": "PaymentMethod"
+    },
+    {
+      "id": "drift",
+      "name": "Value Drift for column tenure_cohort",
+      "description": "Drift score is 0.00. The drift detection method is Jensen-Shannon distance. The drift threshold is 0.10.",
+      "status": "SUCCESS",
+      "column": "tenure_cohort"
+    },
+    {
+      "id": "gt",
+      "name": "Accuracy metric: Greater 0.750",
+      "description": "Accuracy metric: Actual value 0.804 >= 0.750",
+      "status": "SUCCESS",
+      "column": null
+    },
+    {
+      "id": "gt",
+      "name": "RocAuc metric: Greater 0.780",
+      "description": "RocAuc metric: Actual value 0.853 >= 0.780",
+      "status": "SUCCESS",
+      "column": null
+    }
+  ],
+  "reference_rows": 4929,
+  "current_rows": 1057,
+  "classification_monitored": true,
+  "html_report_path": "artifacts\\reports\\evidently_drift_report.html",
+  "action_plan": {
+    "timestamp_utc": "2026-11-14T19:22:27.375630+00:00",
+    "severity": "OK",
+    "severity_level": 0,
+    "retrain_recommended": false,
+    "retrain_executed": false,
+    "retrain_status": "not_required",
+    "reasons": [
+      "All monitored distributions and test checks within thresholds."
+    ],
+    "actions": [
+      {
+        "action": "CONTINUE_PRODUCTION_SERVING",
+        "priority": "LOW",
+        "status": "EXECUTED",
+        "detail": "All Evidently drift and quality tests passed; champion model remains active."
+      }
+    ]
+  }
+}

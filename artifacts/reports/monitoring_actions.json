@@ -1,0 +1,33 @@
+{
+  "severity": "OK",
+  "severity_level": 0,
+  "retrain_recommended": false,
+  "retrain_executed": false,
+  "retrain_status": "not_required",
+  "timestamp_utc": "2026-11-14T19:22:27.375630+00:00",
+  "drift_share": 0.0,
+  "num_drifted_columns": 0,
+  "num_columns_checked": 34,
+  "drifted_columns": [],
+  "classification_metrics": {
+    "accuracy": 0.8042,
+    "precision": 0.6652,
+    "recall": 0.525,
+    "f1": 0.5868,
+    "roc_auc": 0.853
+  },
+  "tests_total": 37,
+  "tests_passed": 37,
+  "tests_failed": 0,
+  "reasons": [
+    "All monitored distributions and test checks within thresholds."
+  ],
+  "actions": [
+    {
+      "action": "CONTINUE_PRODUCTION_SERVING",
+      "priority": "LOW",
+      "status": "EXECUTED",
+      "detail": "All Evidently drift and quality tests passed; champion model remains active."
+    }
+  ]
+}

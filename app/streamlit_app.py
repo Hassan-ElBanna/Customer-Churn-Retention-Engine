@@ -9,6 +9,7 @@ import joblib
 import numpy as np
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 
 # Ensure `src` is importable when launched from project root
 ROOT_DIR = Path(__file__).resolve().parent.parent
@@ -16,7 +17,9 @@ SRC_DIR = ROOT_DIR / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
+from churn_engine.config import load_config
 from churn_engine.features.preprocessor import ChurnFeaturePreprocessor
+from churn_engine.monitoring.evidently_monitor import EvidentlyMonitor
 from churn_engine.retention.engine import RetentionEngine
 
 st.set_page_config(
@@ -711,6 +714,161 @@ def main() -> None:
             else "🔴 Retrain Recommended",
         )
 
+        st.divider()
+        st.subheader("🛡️ Evidently AI Drift, Model Quality & Automated Action Engine")
+
+        actions_path = ROOT_DIR / "artifacts/reports/monitoring_actions.json"
+        evidently_html_path = ROOT_DIR / "artifacts/reports/evidently_drift_report.html"
+        actions_data = (
+            json.loads(actions_path.read_text(encoding="utf-8")) if actions_path.exists() else {}
+        )
+
+        if actions_data:
+            severity = actions_data.get("severity", "OK")
+            banner_fn = (
+                st.error
+                if severity == "CRITICAL"
+                else (st.warning if severity == "WARNING" else st.success)
+            )
+            banner_fn(
+                f"Latest Evidently Monitoring Status: **{severity}** | "
+                f"Retrain Recommended: **{actions_data.get('retrain_recommended', False)}** | "
+                f"Reasons: {'; '.join(actions_data.get('reasons', []))}"
+            )
+
+            e1, e2, e3, e4 = st.columns(4)
+            e1.metric("Columns Checked", f"{actions_data.get('num_columns_checked', 0)}")
+            e2.metric("Drifted Columns", f"{actions_data.get('num_drifted_columns', 0)}")
+            e3.metric("Drift Share", f"{actions_data.get('drift_share', 0.0) * 100:.1f}%")
+            e4.metric(
+                "Evidently Tests Passed",
+                f"{actions_data.get('tests_passed', 0)}/{actions_data.get('tests_total', 0)}",
+            )
+
+            actions_list = actions_data.get("actions", [])
+            if actions_list:
+                st.markdown("**Automated MLOps Actions Taken / Recommended**")
+                st.dataframe(pd.DataFrame(actions_list), use_container_width=True, hide_index=True)
+        else:
+            st.info(
+                "No Evidently monitoring action log found yet. Run the pipeline or trigger a live audit below."
+            )
+
+        with st.expander("⚡ Run Live Evidently Drift Audit & Automated Actions", expanded=False):
+            audit_col1, audit_col2 = st.columns([2, 1])
+            with audit_col1:
+                mon_upload = st.file_uploader(
+                    "Upload Production Batch CSV to Audit Against Reference Data",
+                    type=["csv"],
+                    key="evidently_batch_upload",
+                )
+            with audit_col2:
+                simulate_shift = st.checkbox(
+                    "Simulate Severe Feature Drift",
+                    value=False,
+                    help="Shift tenure & MonthlyCharges on a sample batch to verify automated CRITICAL action & retraining triggers.",
+                )
+
+            act_b1, act_b2 = st.columns(2)
+            run_audit_clicked = act_b1.button(
+                "🔍 Run Evidently Audit Now", type="primary", use_container_width=True
+            )
+            retrain_clicked = act_b2.button(
+                "🔄 Trigger Model Retraining Now", use_container_width=True
+            )
+
+            if run_audit_clicked:
+                if raw_df.empty:
+                    st.warning("Reference dataset not found at data/raw/customer_churn.csv.")
+                else:
+                    with st.spinner("Running Evidently AI DataDrift & Quality Suite..."):
+                        cfg = load_config(str(ROOT_DIR / "configs/config.yaml"))
+                        mon_cfg = cfg["monitoring"]
+                        id_col = cfg["data"].get("id_column", "customerID")
+                        target_col = cfg["data"]["target_column"]
+
+                        ref_clean = ChurnFeaturePreprocessor.clean_and_engineer_domain_features(
+                            raw_df.drop(columns=[c for c in (id_col, target_col) if c in raw_df.columns])
+                        )
+                        if mon_upload is not None:
+                            cur_raw = pd.read_csv(mon_upload)
+                        else:
+                            cur_raw = raw_df.sample(n=min(400, len(raw_df)), random_state=42).copy()
+
+                        if simulate_shift:
+                            if "tenure" in cur_raw.columns:
+                                cur_raw["tenure"] = np.clip(
+                                    pd.to_numeric(cur_raw["tenure"], errors="coerce").fillna(1) * 0.2,
+                                    0,
+                                    12,
+                                )
+                            if "MonthlyCharges" in cur_raw.columns:
+                                cur_raw["MonthlyCharges"] = (
+                                    pd.to_numeric(cur_raw["MonthlyCharges"], errors="coerce").fillna(70)
+                                    + 45.0
+                                )
+                            if "Contract" in cur_raw.columns:
+                                cur_raw["Contract"] = "Month-to-month"
+                            if "PaymentMethod" in cur_raw.columns:
+                                cur_raw["PaymentMethod"] = "Electronic check"
+
+                        cur_clean = ChurnFeaturePreprocessor.clean_and_engineer_domain_features(
+                            cur_raw.drop(columns=[c for c in (id_col, target_col) if c in cur_raw.columns])
+                        )
+
+                        prep_loaded = artifacts["preprocessor"]
+                        bundle_loaded = artifacts["model_bundle"]
+                        ref_clean["pred_prob"] = bundle_loaded["model"].predict_proba(
+                            prep_loaded.transform(raw_df)
+                        )[:, 1]
+                        cur_clean["pred_prob"] = bundle_loaded["model"].predict_proba(
+                            prep_loaded.transform(cur_raw)
+                        )[:, 1]
+
+                        monitor = EvidentlyMonitor(
+                            drift_share_threshold=mon_cfg.get("drift_share_threshold", 0.25),
+                            psi_threshold=mon_cfg["psi_threshold"],
+                            severe_psi_threshold=mon_cfg.get("severe_psi_threshold", 0.35),
+                        )
+                        live_summary = monitor.run_monitoring(
+                            ref_clean,
+                            cur_clean,
+                            html_output_path=evidently_html_path,
+                            json_output_path=ROOT_DIR / "artifacts/reports/evidently_summary.json",
+                            actions_output_path=actions_path,
+                        )
+                        st.session_state["last_live_audit"] = live_summary["action_plan"]
+                        st.success(
+                            f"Audit complete! Severity: {live_summary['action_plan']['severity']} "
+                            f"({live_summary['num_drifted_columns']}/{live_summary['num_columns_checked']} drifted). Refresh or scroll below for report."
+                        )
+
+            if retrain_clicked:
+                with st.spinner("Executing full MLOps retraining pipeline (`pipelines.training_pipeline`)..."):
+                    from pipelines.training_pipeline import run_pipeline
+
+                    run_pipeline(config_path=str(ROOT_DIR / "configs/config.yaml"), stage="all")
+                    load_mlops_artifacts.clear()
+                    st.success("Retraining complete and artifacts refreshed! Reloading dashboard state...")
+                    st.rerun()
+
+        if evidently_html_path.exists():
+            html_content = evidently_html_path.read_text(encoding="utf-8")
+            st.download_button(
+                "⬇️ Download Interactive Evidently HTML Report",
+                data=html_content,
+                file_name="evidently_drift_report.html",
+                mime="text/html",
+            )
+            with st.expander("📊 Interactive Evidently AI Drift & Quality Report", expanded=False):
+                components.html(html_content, height=780, scrolling=True)
+
+        st.caption(
+            "Telemetry stack endpoints (Docker Compose): FastAPI Prometheus `/metrics` (`:8000/metrics`), "
+            "Prometheus (`:9090`), Grafana MLOps Dashboard (`:3000`, provisioned `churn-mlops-observability`)."
+        )
+
 
 if __name__ == "__main__":
     main()
+

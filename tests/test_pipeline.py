@@ -10,6 +10,7 @@ from churn_engine.features.preprocessor import ChurnFeaturePreprocessor
 from churn_engine.models.evaluator import ModelEvaluator
 from churn_engine.models.trainer import ChurnModelTrainer
 from churn_engine.monitoring.drift import DriftDetector
+from churn_engine.monitoring.evidently_monitor import EvidentlyMonitor
 from churn_engine.retention.engine import RetentionEngine
 
 
@@ -163,4 +164,129 @@ def test_drift_detector_identifies_shifted_distribution():
     report = detector.evaluate_drift(ref_df, cur_df)
     assert "f1" in report["drifted_features"]
     assert "f2" not in report["drifted_features"]
+
+
+def test_evidently_monitor_detects_drift_and_executes_retrain_action(tmp_path):
+    rng = np.random.RandomState(42)
+    ref_df = pd.DataFrame(
+        {
+            "tenure": rng.randint(12, 72, size=200),
+            "MonthlyCharges": rng.normal(65.0, 10.0, size=200),
+            "Contract": rng.choice(["One year", "Two year"], size=200),
+            "Churn": rng.choice([0, 1], size=200, p=[0.75, 0.25]),
+        }
+    )
+    ref_df["pred_prob"] = np.clip(ref_df["Churn"] * 0.7 + rng.uniform(0.05, 0.25, 200), 0.0, 1.0)
+    ref_df["pred_label"] = (ref_df["pred_prob"] >= 0.5).astype(int)
+
+    # Identical / stable current batch should stay OK
+    stable_df = ref_df.sample(n=180, random_state=7).reset_index(drop=True)
+    monitor = EvidentlyMonitor(drift_share_threshold=0.25, psi_threshold=0.20)
+    html_ok = tmp_path / "ok.html"
+    actions_ok = tmp_path / "actions_ok.json"
+    ok_res = monitor.run_monitoring(
+        ref_df,
+        stable_df,
+        target_col="Churn",
+        pred_label_col="pred_label",
+        pred_prob_col="pred_prob",
+        html_output_path=html_ok,
+        actions_output_path=actions_ok,
+    )
+    assert html_ok.exists()
+    assert actions_ok.exists()
+    assert ok_res["action_plan"]["severity"] == "OK"
+    assert ok_res["action_plan"]["retrain_recommended"] is False
+
+    # Severely drifted batch + auto_retrain=True should execute callback
+    drifted_df = ref_df.copy()
+    drifted_df["tenure"] = rng.randint(1, 5, size=200)
+    drifted_df["MonthlyCharges"] = rng.normal(115.0, 5.0, size=200)
+    drifted_df["Contract"] = "Month-to-month"
+
+    retrain_calls = []
+    html_crit = tmp_path / "crit.html"
+    actions_crit = tmp_path / "actions_crit.json"
+    crit_res = monitor.run_monitoring(
+        ref_df,
+        drifted_df,
+        target_col="Churn",
+        pred_label_col="pred_label",
+        pred_prob_col="pred_prob",
+        html_output_path=html_crit,
+        actions_output_path=actions_crit,
+        auto_retrain=True,
+        retrain_callback=lambda: retrain_calls.append("triggered"),
+    )
+    assert crit_res["action_plan"]["severity"] == "CRITICAL"
+    assert crit_res["action_plan"]["retrain_recommended"] is True
+    assert crit_res["action_plan"]["retrain_executed"] is True
+    assert retrain_calls == ["triggered"]
+
+
+def test_api_prometheus_metrics_and_monitoring_endpoints(tmp_path, monkeypatch):
+    import json
+    import churn_engine.api.main as api_main
+
+    raw_df = _make_synthetic_churn_df(160)
+    prep = ChurnFeaturePreprocessor(target_column="Churn")
+    train_df, val_df, test_df = prep.split_data(raw_df, test_size=0.2, val_size=0.2)
+    X_train = prep.fit_transform(train_df)
+    X_val = prep.transform(val_df)
+    X_test = prep.transform(test_df)
+
+    trainer = ChurnModelTrainer(evaluator=ModelEvaluator(), primary_metric="roc_auc")
+    champ_name, champ_model, _ = trainer.train_and_select_champion(
+        X_train, train_df["Churn"], X_val, val_df["Churn"], X_test, test_df["Churn"]
+    )
+    _STATE["preprocessor"] = prep
+    _STATE["model_bundle"] = {
+        "model_name": champ_name,
+        "model": champ_model,
+        "threshold": trainer.champion_threshold,
+    }
+
+    actions_file = tmp_path / "monitoring_actions.json"
+    actions_file.write_text(
+        json.dumps(
+            {
+                "severity": "WARNING",
+                "severity_level": 1,
+                "retrain_recommended": False,
+                "num_drifted_columns": 2,
+                "drift_share": 0.12,
+                "actions": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(api_main, "MONITORING_ACTIONS_PATH", actions_file)
+
+    client = TestClient(app)
+    pred_res = client.post(
+        "/predict",
+        json={
+            "customer_id": "CUST-PROM-01",
+            "features": {
+                "tenure": 3,
+                "MonthlyCharges": 95.0,
+                "TotalCharges": 285.0,
+                "Contract": "Month-to-month",
+                "TechSupport": "No",
+                "PaymentMethod": "Electronic check",
+            },
+        },
+    )
+    assert pred_res.status_code == 200
+
+    metrics_res = client.get("/metrics")
+    assert metrics_res.status_code == 200
+    assert "churn_predictions_total" in metrics_res.text
+    assert "churn_prediction_latency_seconds" in metrics_res.text
+    assert "churn_drift_detected_features 2.0" in metrics_res.text
+    assert "churn_monitoring_alert_severity 1.0" in metrics_res.text
+
+    status_res = client.get("/monitoring/status")
+    assert status_res.status_code == 200
+    assert status_res.json()["status"] == "WARNING"
 

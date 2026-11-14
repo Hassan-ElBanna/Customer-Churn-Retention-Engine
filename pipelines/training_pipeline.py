@@ -13,6 +13,7 @@ from churn_engine.features.preprocessor import ChurnFeaturePreprocessor
 from churn_engine.models.evaluator import ModelEvaluator
 from churn_engine.models.trainer import ChurnModelTrainer
 from churn_engine.monitoring.drift import DriftDetector
+from churn_engine.monitoring.evidently_monitor import EvidentlyMonitor
 from churn_engine.retention.engine import RetentionEngine
 from churn_engine.utils.logger import get_logger
 from churn_engine.utils.tracking import ExperimentTracker
@@ -178,15 +179,61 @@ def run_pipeline(
     summary["sample_retention_plans"] = sample_plans
 
     # -------------------------------------------------------------------------
-    # Phase 5: Reference vs Test Data Drift Check
+    # Phase 5: Reference vs Test Data Drift Check & Evidently AI Audit
     # -------------------------------------------------------------------------
-    logger.info("=== PHASE 5: Data Drift Baseline Verification ===")
+    logger.info("=== PHASE 5: Data Drift Baseline & Evidently AI Monitoring ===")
+    mon_cfg = cfg["monitoring"]
     drift_detector = DriftDetector(
-        psi_threshold=cfg["monitoring"]["psi_threshold"],
-        ks_alpha=cfg["monitoring"]["ks_alpha"],
+        psi_threshold=mon_cfg["psi_threshold"],
+        ks_alpha=mon_cfg["ks_alpha"],
     )
     drift_report = drift_detector.evaluate_drift(X_train, X_test)
     drift_detector.save_report(drift_report, reports_dir / "drift_report.json")
+
+    id_col = data_cfg.get("id_column", "customerID")
+    clean_train_df = ChurnFeaturePreprocessor.clean_and_engineer_domain_features(
+        train_df.drop(columns=[c for c in (id_col,) if c in train_df.columns])
+    )
+    clean_test_df = ChurnFeaturePreprocessor.clean_and_engineer_domain_features(
+        test_df.drop(columns=[c for c in (id_col,) if c in test_df.columns])
+    )
+    clean_train_df["pred_prob"] = champion_model.predict_proba(X_train)[:, 1]
+    clean_train_df["pred_label"] = (
+        clean_train_df["pred_prob"] >= trainer.champion_threshold
+    ).astype(int)
+    clean_test_df["pred_prob"] = test_probs
+    clean_test_df["pred_label"] = (
+        clean_test_df["pred_prob"] >= trainer.champion_threshold
+    ).astype(int)
+
+    evidently_html_path = Path(
+        mon_cfg.get("evidently_html_path", reports_dir / "evidently_drift_report.html")
+    )
+    evidently_json_path = Path(
+        mon_cfg.get("evidently_json_path", reports_dir / "evidently_summary.json")
+    )
+    actions_report_path = Path(
+        mon_cfg.get("actions_report_path", reports_dir / "monitoring_actions.json")
+    )
+
+    evidently_monitor = EvidentlyMonitor(
+        drift_share_threshold=mon_cfg.get("drift_share_threshold", 0.25),
+        psi_threshold=mon_cfg["psi_threshold"],
+        severe_psi_threshold=mon_cfg.get("severe_psi_threshold", 0.35),
+        min_accuracy_threshold=mon_cfg.get("min_accuracy_threshold", 0.75),
+        min_roc_auc_threshold=mon_cfg.get("min_roc_auc_threshold", 0.78),
+    )
+    evidently_summary = evidently_monitor.run_monitoring(
+        clean_train_df,
+        clean_test_df,
+        target_col=target_col,
+        pred_label_col="pred_label",
+        pred_prob_col="pred_prob",
+        html_output_path=evidently_html_path,
+        json_output_path=evidently_json_path,
+        actions_output_path=actions_report_path,
+    )
+    summary["evidently_monitoring"] = evidently_summary["action_plan"]
 
     tracker.log_pipeline_summary(
         champion_name=champion_name,
@@ -198,6 +245,9 @@ def run_pipeline(
             reports_dir / "eda_insights.json",
             reports_dir / "evaluation_metrics.json",
             reports_dir / "drift_report.json",
+            evidently_html_path,
+            evidently_json_path,
+            actions_report_path,
             reports_dir / "figures",
         ],
     )

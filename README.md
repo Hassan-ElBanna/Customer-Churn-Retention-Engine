@@ -19,10 +19,13 @@ A production-ready Machine Learning Operations (MLOps) system that predicts cust
 4. **Phase 4 — Retention & Next-Best-Action Engine (`src/churn_engine/retention/engine.py`)**
    - Segments customers into `Low`, `Medium`, `High`, and `Critical` risk tiers.
    - Estimates Customer Annual Recurring Value (ARR), calculates Revenue at Risk, caps maximum incentive budget, and recommends channel-specific interventions.
-5. **Phase 5 — Data & Concept Drift Monitoring (`src/churn_engine/monitoring/drift.py`)**
-   - Computes Population Stability Index (PSI) and Two-Sample Kolmogorov-Smirnov (KS) tests to trigger automated retraining alerts.
-6. **Phase 6 — FastAPI Real-Time & Batch Serving (`src/churn_engine/api/main.py`)**
-   - REST endpoints `/health`, `/predict`, and `/predict/batch` packaged with Docker & Docker Compose alongside an MLflow Tracking Server.
+5. **Phase 5 — Evidently AI Monitoring, Drift Detection & Automated Actions (`src/churn_engine/monitoring/`)**
+   - Runs **Evidently AI** (`evidently_monitor.py`) alongside custom PSI & Two-Sample KS checks (`drift.py`) to monitor feature drift, prediction drift, and classification SLAs (`accuracy > 0.75`, `roc_auc > 0.78`).
+   - Exports interactive HTML reports (`artifacts/reports/evidently_drift_report.html`) and persistent action logs (`artifacts/reports/monitoring_actions.json`).
+   - Triages alert severity (`OK`, `WARNING`, `CRITICAL`), optionally notifies `MONITORING_WEBHOOK_URL`, and automatically triggers model retraining (`scripts/monitor_and_act.py --auto-retrain`) when drift or degradation breaches thresholds.
+6. **Phase 6 — FastAPI Serving, Prometheus Metrics & Grafana Stack (`src/churn_engine/api/main.py`, `monitoring/`)**
+   - REST endpoints `/health`, `/predict`, `/predict/batch`, `/metrics` (Prometheus telemetry), `/monitoring/status`, and `/monitoring/check`.
+   - Packaged with Docker Compose alongside **MLflow**, **Streamlit UI**, **Prometheus**, and an auto-provisioned **Grafana** observability dashboard (`monitoring/grafana/dashboards/churn_monitoring_dashboard.json`).
 
 ---
 
@@ -30,27 +33,35 @@ A production-ready Machine Learning Operations (MLOps) system that predicts cust
 
 ```text
 ├── .github/workflows/mlops_ci.yml   # CI/CD linting & automated test workflow
-├── configs/config.yaml              # Centralized hyperparameters, paths & business cost settings
+├── app/
+│   └── streamlit_app.py             # Interactive Streamlit Command Center & Evidently audit UI
+├── configs/config.yaml              # Centralized hyperparameters, paths, monitoring & cost settings
 ├── data/
 │   ├── raw/                         # Raw ingested dataset
 │   └── processed/                   # Stratified train/val/test splits
 ├── artifacts/
 │   ├── models/                      # Fitted preprocessor & champion model bundles
-│   └── reports/                     # JSON validation, evaluation & drift reports
+│   └── reports/                     # JSON validation, evaluation, Evidently HTML & action reports
+├── monitoring/
+│   ├── prometheus/prometheus.yml    # Prometheus scrape config targeting churn-api:8000/metrics
+│   └── grafana/                     # Auto-provisioned datasource & Churn MLOps Grafana dashboard
 ├── pipelines/
 │   └── training_pipeline.py         # End-to-end MLOps pipeline entrypoint
+├── scripts/
+│   ├── link_remotes.py              # GitHub, DVC & DagsHub MLflow linking helper
+│   └── monitor_and_act.py           # CLI batch drift audit & automated retraining runner
 ├── src/churn_engine/
-│   ├── api/                         # FastAPI serving app & Pydantic schemas
-│   ├── data/                        # DataIngestor & DataValidator
+│   ├── api/                         # FastAPI serving app, /metrics & Pydantic schemas
+│   ├── data/                        # DataIngestor, DataValidator & ChurnEDAAnalyzer
 │   ├── features/                    # ChurnFeaturePreprocessor
 │   ├── models/                      # ChurnModelTrainer & ModelEvaluator
-│   ├── monitoring/                  # DriftDetector (PSI & KS-test)
+│   ├── monitoring/                  # EvidentlyMonitor (reports/actions) & DriftDetector (PSI/KS)
 │   ├── retention/                   # RetentionEngine & playbook generator
-│   └── utils/                       # Structured logging
+│   └── utils/                       # Structured logging & DagsHub/MLflow tracking
 ├── tests/
 │   └── test_pipeline.py             # End-to-end unit & integration suite
 ├── Dockerfile                       # Production container image
-├── docker-compose.yml               # FastAPI + MLflow stack
+├── docker-compose.yml               # FastAPI + Streamlit + MLflow + Prometheus + Grafana stack
 ├── dvc.yaml                         # DVC pipeline stages
 ├── pyproject.toml                   # Package metadata & tool configs
 └── requirements.txt                 # Pinned dependencies
@@ -96,6 +107,20 @@ Or copy [.env.example](file:///d:/Hassan/Projects/test%20projects/MLOps%20projec
 ```bash
 .\.venv\Scripts\python.exe scripts/link_remotes.py --push
 .\.venv\Scripts\python.exe -m pipelines.training_pipeline
+```
+
+### 5. Run Monitoring Audits, Automated Retraining & Grafana Stack
+
+```bash
+# Audit a production batch with Evidently AI and auto-retrain on CRITICAL drift/degradation
+.\.venv\Scripts\python.exe scripts/monitor_and_act.py \
+  --reference data/raw/customer_churn.csv \
+  --current "<path_to_new_batch.csv>" \
+  --auto-retrain
+
+# Launch full containerized stack:
+# FastAPI (:8000/docs & :8000/metrics), Streamlit (:8501), MLflow (:5000), Prometheus (:9090), Grafana (:3000, admin/admin)
+docker compose up --build
 ```
 
 

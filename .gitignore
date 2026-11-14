@@ -23,6 +23,7 @@ env/
 /data/processed/test.parquet
 /artifacts/models/preprocessor.joblib
 /artifacts/models/champion_model.joblib
+/artifacts/reports/evidently_drift_report.html
 
 # Local MLflow store
 mlruns/

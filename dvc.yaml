@@ -12,6 +12,7 @@ stages:
       - src/churn_engine/models/evaluator.py
       - src/churn_engine/retention/engine.py
       - src/churn_engine/monitoring/drift.py
+      - src/churn_engine/monitoring/evidently_monitor.py
     outs:
       - data/raw/customer_churn.csv
       - data/processed/train.parquet
@@ -19,10 +20,13 @@ stages:
       - data/processed/test.parquet
       - artifacts/models/preprocessor.joblib
       - artifacts/models/champion_model.joblib
+      - artifacts/reports/evidently_drift_report.html
     metrics:
       - artifacts/reports/evaluation_metrics.json:
           cache: false
       - artifacts/reports/data_validation_report.json:
           cache: false
       - artifacts/reports/drift_report.json:
+          cache: false
+      - artifacts/reports/monitoring_actions.json:
           cache: false
