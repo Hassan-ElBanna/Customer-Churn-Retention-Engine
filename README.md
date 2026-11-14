@@ -11,9 +11,9 @@ A production-ready Machine Learning Operations (MLOps) system that predicts cust
    - Automated schema, target distribution, duplicate, missingness, and zero-variance checks (`artifacts/reports/data_validation_report.json`).
 2. **Phase 2 — Leakage-Free Feature Engineering (`src/churn_engine/features/preprocessor.py`)**
    - Strict stratified `Train / Validation / Test` split **before** fitting any imputers, encoders, or scalers.
-   - Domain-engineered behavioral and financial ratios (`avg_monthly_spend_historical`, `monthly_to_historical_spend_ratio`, `balance_to_salary_ratio`, `tenure_to_age_ratio`).
+   - Domain-engineered behavioral and financial features (`avg_monthly_spend_historical`, `monthly_to_historical_spend_ratio`, `monthly_charges_to_tenure_ratio`, `committed_contract_value`, `unprotected_fiber_flag`, `high_risk_triad_flag`, plus cross-schema ratios `balance_to_salary_ratio` and `tenure_to_age_ratio`).
 3. **Phase 3 — Multi-Model Training, Evaluation & Champion Selection (`src/churn_engine/models/`)**
-   - Compares Naive Baseline, Logistic Regression, Random Forest, and XGBoost.
+   - Compares Naive Baseline, Logistic Regression, Random Forest, Gradient Boosting, XGBoost, and a soft Voting Ensemble.
    - Optimizes classification probability thresholds against business false-negative / false-positive costs.
    - Computes 95% bootstrapped ROC-AUC confidence intervals, PR-AUC, F1, and Brier calibration scores.
 4. **Phase 4 — Retention & Next-Best-Action Engine (`src/churn_engine/retention/engine.py`)**
@@ -49,6 +49,8 @@ A production-ready Machine Learning Operations (MLOps) system that predicts cust
 ├── monitoring/
 │   ├── prometheus/prometheus.yml    # Prometheus scrape config targeting churn-api:8000/metrics
 │   └── grafana/                     # Auto-provisioned datasource & Churn MLOps Grafana dashboard
+├── notebooks/
+│   └── telco_churn_eda_and_mlops.ipynb # Exploratory analysis & end-to-end MLOps walkthrough
 ├── pipelines/
 │   └── training_pipeline.py         # End-to-end MLOps pipeline entrypoint
 ├── scripts/
@@ -82,9 +84,10 @@ A production-ready Machine Learning Operations (MLOps) system that predicts cust
 python -m pipelines.training_pipeline --url "<YOUR_DATASET_DOWNLOAD_LINK>"
 ```
 
-### 2. Run Tests
+### 2. Run Linter & Tests
 ```bash
-pytest
+.\.venv\Scripts\python.exe -m ruff check src/ pipelines/ tests/ scripts/vercel_build.py
+.\.venv\Scripts\python.exe -m pytest
 ```
 
 ### 3. Start the Interactive Streamlit Frontend or FastAPI Service
@@ -98,7 +101,7 @@ pytest
 
 ### 4. Link GitHub, DVC & MLflow with DagsHub
 
-You can connect the project to your **GitHub** repository and **DagsHub** (which hosts both your **DVC remote storage** and your **MLflow tracking server**) in a single command using [link_remotes.py](file:///d:/Hassan/Projects/test%20projects/MLOps%20project/scripts/link_remotes.py):
+You can connect the project to your **GitHub** repository and **DagsHub** (which hosts both your **DVC remote storage** and your **MLflow tracking server**) in a single command using [scripts/link_remotes.py](scripts/link_remotes.py):
 
 ```bash
 .\.venv\Scripts\python.exe scripts/link_remotes.py \
@@ -109,7 +112,7 @@ You can connect the project to your **GitHub** repository and **DagsHub** (which
   --push
 ```
 
-Or copy [.env.example](file:///d:/Hassan/Projects/test%20projects/MLOps%20project/.env.example) to `.env`, fill in your credentials, and run:
+Or copy [.env.example](.env.example) to `.env`, fill in your credentials, and run:
 ```bash
 .\.venv\Scripts\python.exe scripts/link_remotes.py --push
 .\.venv\Scripts\python.exe -m pipelines.training_pipeline
@@ -133,11 +136,12 @@ docker compose up --build
 
 The repository deploys as a Vercel FastAPI project configured via `[tool.vercel].entrypoint = "src.churn_engine.api.main:app"` in [pyproject.toml](pyproject.toml), [public/index.html](public/index.html), [scripts/vercel_build.py](scripts/vercel_build.py), and [vercel.json](vercel.json), alongside an automated GitHub Actions CD pipeline ([.github/workflows/cd_vercel.yml](.github/workflows/cd_vercel.yml)) that runs CI (`ruff` + `pytest`), pulls/verifies model artifacts on Python 3.12, deploys to Vercel production, and smoke-tests `/health` and `/predict`.
 
-> **Note:** Vercel Serverless Functions run stateless FastAPI inference + the CDN web UI (`/`), whereas the stateful Streamlit dashboard (`app/streamlit_app.py`) runs via Docker Compose or Streamlit Community Cloud.
+- **Production URL:** `https://customer-churn-retention-engine.vercel.app` (deployed automatically on pushes to `main` via Vercel Git Integration).
+- **Note:** Vercel Serverless Functions run stateless FastAPI inference + the CDN web UI (`/`), whereas the stateful Streamlit dashboard (`app/streamlit_app.py`) runs via Docker Compose or Streamlit Community Cloud.
 
-Add these GitHub Repository Secrets (**Settings -> Secrets and variables -> Actions**) to enable automatic CD on every push to `main`:
+Add these GitHub Repository Secrets (**Settings -> Secrets and variables -> Actions**) to also enable the gated CLI build, pre-promotion smoke test, and `vercel promote` steps in `.github/workflows/cd_vercel.yml`:
 - `VERCEL_TOKEN` — Create in Vercel Account Settings -> Tokens
-- `VERCEL_ORG_ID` & `VERCEL_PROJECT_ID` — Shown in your Vercel Project Settings (or generated locally by running `npx vercel link` inside `.vercel/project.json`)
+- `VERCEL_ORG_ID` & `VERCEL_PROJECT_ID` — Found in your Vercel Team/Project Settings (or generated locally by running `npx vercel link` inside `.vercel/project.json`)
 - `DAGSHUB_USER` & `DAGSHUB_TOKEN` *(optional)* — Used to pull DVC-managed `champion_model.joblib` & `preprocessor.joblib` prior to deploying (if omitted, CD trains compatible Python 3.12 artifacts automatically before deploying).
 
 
