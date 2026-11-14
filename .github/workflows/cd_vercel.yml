@@ -1,0 +1,125 @@
+name: Continuous Deployment (Vercel)
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  ci-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12 (Vercel Runtime Target)
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies & test suite
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[ml,dev]"
+
+      - name: Lint with Ruff
+        run: ruff check src/ pipelines/ tests/ api/
+
+      - name: Run Pytest Suite
+        run: pytest tests/ -v --cov=src/churn_engine --cov-report=term-missing
+
+  deploy-vercel:
+    needs: ci-gate
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - name: Verify Vercel Secrets Configured
+        id: secrets_check
+        run: |
+          if [ -z "$VERCEL_TOKEN" ] || [ -z "$VERCEL_ORG_ID" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
+            echo "::notice::VERCEL_TOKEN / VERCEL_ORG_ID / VERCEL_PROJECT_ID not set in GitHub Actions Secrets; skipping CLI --prebuilt deploy (linked Vercel Git Integration deploys automatically)."
+            echo "has_secrets=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_secrets=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout repository
+        if: steps.secrets_check.outputs.has_secrets == 'true'
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        if: steps.secrets_check.outputs.has_secrets == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install runtime & DVC tools
+        if: steps.secrets_check.outputs.has_secrets == 'true'
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[ml,dev]"
+
+      - name: Pull DVC Model Artifacts & Ensure Python 3.12 Runtime Compatibility
+        if: steps.secrets_check.outputs.has_secrets == 'true'
+        env:
+          DAGSHUB_USER: ${{ secrets.DAGSHUB_USER }}
+          DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
+        run: |
+          if [ -n "$DAGSHUB_TOKEN" ]; then
+            dvc remote modify --local origin auth basic
+            dvc remote modify --local origin user "${DAGSHUB_USER:-hmelbanna100}"
+            dvc remote modify --local origin password "$DAGSHUB_TOKEN"
+            dvc pull artifacts/models/champion_model.joblib artifacts/models/preprocessor.joblib || true
+          fi
+          python scripts/vercel_build.py
+
+      - name: Install Vercel CLI
+        if: steps.secrets_check.outputs.has_secrets == 'true'
+        run: npm install --global vercel
+
+      - name: Pull Vercel Project Environment
+        if: steps.secrets_check.outputs.has_secrets == 'true'
+        run: vercel pull --yes --environment=production
+
+      - name: Build Production Bundle for Vercel
+        if: steps.secrets_check.outputs.has_secrets == 'true'
+        run: vercel build --prod
+
+      - name: Stage Production Deployment on Vercel
+        id: deploy
+        if: steps.secrets_check.outputs.has_secrets == 'true'
+        run: |
+          DEPLOY_URL=$(vercel deploy --prebuilt --prod --skip-domain --yes | grep -Eo 'https://[^[:space:]]+' | tail -n 1)
+          if [ -z "$DEPLOY_URL" ]; then
+            echo "::error::Failed to capture staged Vercel deployment URL."
+            exit 1
+          fi
+          echo "url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
+
+      - name: Post-Deploy Smoke Test Before Traffic Promotion (/health and /predict)
+        if: steps.secrets_check.outputs.has_secrets == 'true'
+        run: |
+          DEPLOY_URL="${{ steps.deploy.outputs.url }}"
+          echo "Smoke testing staged deployment $DEPLOY_URL via vercel curl ..."
+          vercel curl "$DEPLOY_URL/" --fail --silent --show-error > /dev/null
+          HEALTH=$(vercel curl "$DEPLOY_URL/health" --fail --silent --show-error)
+          echo "Health response: $HEALTH"
+          echo "$HEALTH" | grep -q '"model_loaded":true'
+          PRED=$(vercel curl "$DEPLOY_URL/predict" --fail --silent --show-error \
+            -X POST \
+            -H "Content-Type: application/json" \
+            -d '{"customer_id":"CD-SMOKE-01","features":{"tenure":3,"MonthlyCharges":95.0,"TotalCharges":285.0,"Contract":"Month-to-month","InternetService":"Fiber optic","TechSupport":"No","OnlineSecurity":"No","PaymentMethod":"Electronic check"}}')
+          echo "Predict response: $PRED"
+          echo "$PRED" | grep -q '"churn_probability"'
+
+      - name: Promote Verified Build to Vercel Production Domain
+        if: steps.secrets_check.outputs.has_secrets == 'true'
+        run: |
+          DEPLOY_URL="${{ steps.deploy.outputs.url }}"
+          vercel promote "$DEPLOY_URL" --yes
+          echo "Promoted verified ML deployment to Vercel production: $DEPLOY_URL" >> "$GITHUB_STEP_SUMMARY"

@@ -290,3 +290,49 @@ def test_api_prometheus_metrics_and_monitoring_endpoints(tmp_path, monkeypatch):
     assert status_res.status_code == 200
     assert status_res.json()["status"] == "WARNING"
 
+    home_res = client.get("/")
+    assert home_res.status_code == 200
+    assert "Customer Churn" in home_res.text
+
+    info_res = client.get("/model-info")
+    assert info_res.status_code == 200
+
+
+def test_vercel_entrypoint_exports_fastapi_app():
+    from api.index import app as vercel_app
+
+    vercel_client = TestClient(vercel_app)
+    res = vercel_client.get("/health")
+    assert res.status_code == 200
+    assert res.json()["status"] == "healthy"
+
+
+def test_vercel_build_builds_and_verifies_compatible_artifacts(tmp_path, monkeypatch):
+    import scripts.vercel_build as vercel_build
+
+    model_path = tmp_path / "champion_model.joblib"
+    prep_path = tmp_path / "preprocessor.joblib"
+    metrics_path = tmp_path / "evaluation_metrics.json"
+    sample_df = _make_synthetic_churn_df(240)
+
+    monkeypatch.setattr(vercel_build, "MODEL_PATH", model_path)
+    monkeypatch.setattr(vercel_build, "PREP_PATH", prep_path)
+    monkeypatch.setattr(vercel_build, "EVAL_METRICS_PATH", metrics_path)
+    monkeypatch.setattr(vercel_build, "_load_training_dataframe", lambda _cfg: sample_df)
+
+    assert not vercel_build._verify_artifacts(model_path, prep_path)
+
+    cfg = {
+        "project": {"random_state": 42},
+        "data": {"target_column": "Churn", "test_size": 0.15, "val_size": 0.15},
+        "features": {"max_categorical_cardinality": 50},
+        "training": {"business_cost_fn": 300.0, "business_cost_fp": 75.0, "primary_metric": "accuracy"},
+    }
+    vercel_build._build_compatible_artifacts(cfg)
+
+    assert model_path.exists()
+    assert prep_path.exists()
+    assert metrics_path.exists()
+    assert vercel_build._verify_artifacts(model_path, prep_path)
+
+

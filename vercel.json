@@ -1,0 +1,21 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/index.py": {
+      "maxDuration": 30,
+      "includeFiles": "{artifacts/models/**,artifacts/reports/evaluation_metrics.json,artifacts/reports/monitoring_actions.json,artifacts/reports/drift_report.json,configs/**,src/**}",
+      "excludeFiles": "{data/**,tests/**,app/**,mlruns/**,monitoring/**,.venv/**,artifacts/reports/figures/**,artifacts/reports/evidently_drift_report.html}"
+    }
+  },
+  "rewrites": [
+    { "source": "/health", "destination": "/api/index.py" },
+    { "source": "/model-info", "destination": "/api/index.py" },
+    { "source": "/predict", "destination": "/api/index.py" },
+    { "source": "/predict/batch", "destination": "/api/index.py" },
+    { "source": "/metrics", "destination": "/api/index.py" },
+    { "source": "/monitoring/(.*)", "destination": "/api/index.py" },
+    { "source": "/docs", "destination": "/api/index.py" },
+    { "source": "/redoc", "destination": "/api/index.py" },
+    { "source": "/openapi.json", "destination": "/api/index.py" }
+  ]
+}

@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Customer Churn & Retention Engine — MLOps Command Center</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #1e293b;
+      --panel-alt: #0b1220;
+      --border: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-dark: #0284c7;
+      --ok-bg: #052e16;
+      --ok-text: #4ade80;
+      --warn-bg: #451a03;
+      --warn-text: #fbbf24;
+      --crit-bg: #450a0a;
+      --crit-text: #f87171;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: radial-gradient(circle at top right, #1e293b 0%, var(--bg) 55%);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .container { max-width: 1220px; margin: 0 auto; padding: 1.5rem; }
+    header {
+      display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
+      gap: 1rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--border);
+    }
+    h1 { margin: 0; font-size: 1.65rem; letter-spacing: -0.02em; }
+    .subtitle { color: var(--muted); font-size: 0.92rem; margin-top: 0.2rem; }
+    .nav-links { display: flex; gap: 0.65rem; flex-wrap: wrap; align-items: center; }
+    .pill {
+      padding: 0.38rem 0.8rem; border-radius: 999px; font-size: 0.82rem; font-weight: 600;
+      border: 1px solid var(--border); background: var(--panel); color: var(--text);
+      text-decoration: none;
+    }
+    .pill.ok { background: var(--ok-bg); color: var(--ok-text); border-color: #166534; }
+    .pill.warn { background: var(--warn-bg); color: var(--warn-text); border-color: #92400e; }
+    .pill.crit { background: var(--crit-bg); color: var(--crit-text); border-color: #991b1b; }
+    .grid {
+      display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 1.25rem; margin-top: 1.25rem;
+    }
+    @media (max-width: 920px) { .grid { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+      padding: 1.25rem; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    }
+    .card h2 { margin-top: 0; font-size: 1.1rem; display: flex; justify-content: space-between; align-items: center; }
+    .form-grid {
+      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.8rem;
+    }
+    @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr 1fr; } }
+    label { display: block; font-size: 0.78rem; color: var(--muted); margin-bottom: 0.25rem; font-weight: 600; }
+    input, select {
+      width: 100%; padding: 0.5rem 0.6rem; border-radius: 8px;
+      border: 1px solid var(--border); background: var(--panel-alt); color: var(--text);
+      font-size: 0.88rem;
+    }
+    .actions-row { display: flex; gap: 0.65rem; flex-wrap: wrap; margin-top: 1rem; }
+    button {
+      cursor: pointer; border: none; border-radius: 9px; padding: 0.62rem 1.05rem;
+      font-weight: 600; font-size: 0.88rem; transition: opacity 0.15s;
+    }
+    button:hover { opacity: 0.9; }
+    .btn-primary { background: var(--accent-dark); color: #fff; }
+    .btn-secondary { background: #334155; color: #f8fafc; }
+    .kpi-row {
+      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; margin-bottom: 1rem;
+    }
+    .kpi {
+      background: var(--panel-alt); border: 1px solid var(--border); border-radius: 10px;
+      padding: 0.85rem;
+    }
+    .kpi .k-label { font-size: 0.72rem; text-transform: uppercase; color: var(--muted); letter-spacing: 0.05em; }
+    .kpi .k-val { font-size: 1.35rem; font-weight: 700; margin-top: 0.2rem; }
+    .playbook-list { list-style: none; padding: 0; margin: 0.75rem 0 0 0; display: grid; gap: 0.5rem; }
+    .playbook-item {
+      background: var(--panel-alt); border-left: 3px solid var(--accent);
+      padding: 0.6rem 0.8rem; border-radius: 6px; font-size: 0.88rem;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.84rem; margin-top: 0.5rem; }
+    th, td { text-align: left; padding: 0.48rem 0.55rem; border-bottom: 1px solid var(--border); }
+    th { color: var(--muted); font-weight: 600; }
+    .muted { color: var(--muted); font-size: 0.84rem; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>Customer Churn &amp; Retention Engine</h1>
+        <div class="subtitle">Serverless FastAPI ML Inference + Evidently Monitoring Status (Deployed via GitHub Actions CD on Vercel)</div>
+      </div>
+      <div class="nav-links">
+        <span id="health-pill" class="pill warn">Checking API...</span>
+        <span id="drift-pill" class="pill">Monitoring: loading...</span>
+        <a class="pill" href="/docs" target="_blank">Swagger API Docs</a>
+        <a class="pill" href="/metrics" target="_blank">Prometheus /metrics</a>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="card">
+        <h2>
+          <span>Customer Risk &amp; Retention Predictor</span>
+          <span class="muted" id="champion-label">Model: --</span>
+        </h2>
+
+        <div class="actions-row" style="margin-top:0; margin-bottom:0.9rem;">
+          <button type="button" class="btn-secondary" onclick="applyPreset('high')">Preset: High-Risk Fiber Month-to-Month</button>
+          <button type="button" class="btn-secondary" onclick="applyPreset('low')">Preset: Loyal 2-Year Contract</button>
+        </div>
+
+        <form id="predict-form" onsubmit="submitPrediction(event)">
+          <div class="form-grid">
+            <div><label for="customer_id">Customer ID</label><input id="customer_id" value="CUST-2048" /></div>
+            <div><label for="tenure">Tenure (Months)</label><input id="tenure" type="number" min="0" max="72" value="2" /></div>
+            <div><label for="MonthlyCharges">Monthly Charges ($)</label><input id="MonthlyCharges" type="number" step="0.1" value="96.5" /></div>
+            <div><label for="TotalCharges">Total Charges ($)</label><input id="TotalCharges" type="number" step="0.1" value="193.0" /></div>
+            <div>
+              <label for="Contract">Contract</label>
+              <select id="Contract">
+                <option value="Month-to-month" selected>Month-to-month</option>
+                <option value="One year">One year</option>
+                <option value="Two year">Two year</option>
+              </select>
+            </div>
+            <div>
+              <label for="InternetService">Internet Service</label>
+              <select id="InternetService">
+                <option value="Fiber optic" selected>Fiber optic</option>
+                <option value="DSL">DSL</option>
+                <option value="No">No</option>
+              </select>
+            </div>
+            <div>
+              <label for="PaymentMethod">Payment Method</label>
+              <select id="PaymentMethod">
+                <option value="Electronic check" selected>Electronic check</option>
+                <option value="Mailed check">Mailed check</option>
+                <option value="Bank transfer (automatic)">Bank transfer (automatic)</option>
+                <option value="Credit card (automatic)">Credit card (automatic)</option>
+              </select>
+            </div>
+            <div>
+              <label for="TechSupport">Tech Support</label>
+              <select id="TechSupport">
+                <option value="No" selected>No</option>
+                <option value="Yes">Yes</option>
+                <option value="No internet service">No internet service</option>
+              </select>
+            </div>
+            <div>
+              <label for="OnlineSecurity">Online Security</label>
+              <select id="OnlineSecurity">
+                <option value="No" selected>No</option>
+                <option value="Yes">Yes</option>
+                <option value="No internet service">No internet service</option>
+              </select>
+            </div>
+            <div>
+              <label for="PaperlessBilling">Paperless Billing</label>
+              <select id="PaperlessBilling"><option value="Yes" selected>Yes</option><option value="No">No</option></select>
+            </div>
+            <div>
+              <label for="SeniorCitizen">Senior Citizen</label>
+              <select id="SeniorCitizen"><option value="0" selected>No (0)</option><option value="1">Yes (1)</option></select>
+            </div>
+            <div>
+              <label for="Partner">Partner</label>
+              <select id="Partner"><option value="No" selected>No</option><option value="Yes">Yes</option></select>
+            </div>
+          </div>
+          <div class="actions-row">
+            <button type="submit" class="btn-primary">Predict Churn &amp; Generate Playbook</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>
+          <span>Retention Playbook Output</span>
+          <span id="tier-pill" class="pill">Awaiting Score</span>
+        </h2>
+
+        <div id="result-placeholder" class="muted">
+          Submit the form on the left to invoke <code>POST /predict</code> on the live champion model.
+        </div>
+
+        <div id="result-box" class="hidden">
+          <div class="kpi-row">
+            <div class="kpi">
+              <div class="k-label">Churn Probability</div>
+              <div class="k-val" id="res-prob">--</div>
+            </div>
+            <div class="kpi">
+              <div class="k-label">Predicted Outcome</div>
+              <div class="k-val" id="res-churn">--</div>
+            </div>
+            <div class="kpi">
+              <div class="k-label">Annual ARR at Risk</div>
+              <div class="k-val" id="res-arr">--</div>
+            </div>
+          </div>
+
+          <div class="muted" id="res-budget"></div>
+          <div class="muted" id="res-drivers" style="margin-top:0.35rem;"></div>
+          <h3 style="font-size:0.95rem; margin:0.9rem 0 0.35rem 0;">Recommended Retention Actions</h3>
+          <ul id="res-actions" class="playbook-list"></ul>
+        </div>
+      </section>
+    </div>
+
+    <div class="grid" style="margin-top:1.25rem;">
+      <section class="card">
+        <h2>Held-Out Test Leaderboard</h2>
+        <div id="leaderboard-container" class="muted">Loading model evaluation metrics...</div>
+      </section>
+
+      <section class="card">
+        <h2>Evidently AI Drift &amp; Action Audit</h2>
+        <div id="monitoring-container" class="muted">Loading monitoring status...</div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    function applyPreset(kind) {
+      if (kind === "high") {
+        document.getElementById("tenure").value = 2;
+        document.getElementById("MonthlyCharges").value = 96.5;
+        document.getElementById("TotalCharges").value = 193.0;
+        document.getElementById("Contract").value = "Month-to-month";
+        document.getElementById("InternetService").value = "Fiber optic";
+        document.getElementById("PaymentMethod").value = "Electronic check";
+        document.getElementById("TechSupport").value = "No";
+        document.getElementById("OnlineSecurity").value = "No";
+        document.getElementById("PaperlessBilling").value = "Yes";
+      } else {
+        document.getElementById("tenure").value = 54;
+        document.getElementById("MonthlyCharges").value = 48.0;
+        document.getElementById("TotalCharges").value = 2592.0;
+        document.getElementById("Contract").value = "Two year";
+        document.getElementById("InternetService").value = "DSL";
+        document.getElementById("PaymentMethod").value = "Bank transfer (automatic)";
+        document.getElementById("TechSupport").value = "Yes";
+        document.getElementById("OnlineSecurity").value = "Yes";
+        document.getElementById("PaperlessBilling").value = "No";
+      }
+    }
+
+    async function submitPrediction(event) {
+      event.preventDefault();
+      const payload = {
+        customer_id: document.getElementById("customer_id").value || "CUST-WEB-01",
+        features: {
+          gender: "Female",
+          SeniorCitizen: Number(document.getElementById("SeniorCitizen").value),
+          Partner: document.getElementById("Partner").value,
+          Dependents: "No",
+          tenure: Number(document.getElementById("tenure").value),
+          PhoneService: "Yes",
+          MultipleLines: "No",
+          InternetService: document.getElementById("InternetService").value,
+          OnlineSecurity: document.getElementById("OnlineSecurity").value,
+          OnlineBackup: "No",
+          DeviceProtection: "No",
+          TechSupport: document.getElementById("TechSupport").value,
+          StreamingTV: "No",
+          StreamingMovies: "No",
+          Contract: document.getElementById("Contract").value,
+          PaperlessBilling: document.getElementById("PaperlessBilling").value,
+          PaymentMethod: document.getElementById("PaymentMethod").value,
+          MonthlyCharges: Number(document.getElementById("MonthlyCharges").value),
+          TotalCharges: Number(document.getElementById("TotalCharges").value)
+        }
+      };
+
+      const res = await fetch("/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: "Prediction error" }));
+        alert("API Error: " + (err.detail || res.statusText));
+        return;
+      }
+      const data = await res.json();
+      document.getElementById("result-placeholder").classList.add("hidden");
+      document.getElementById("result-box").classList.remove("hidden");
+      document.getElementById("res-prob").textContent = (data.churn_probability * 100).toFixed(1) + "%";
+      document.getElementById("res-churn").textContent = data.will_churn ? "Churn Risk" : "Retained";
+      document.getElementById("res-arr").textContent = "$" + Number(data.revenue_at_risk || 0).toFixed(2);
+      document.getElementById("res-budget").textContent =
+        `Max retention incentive cap: $${Number(data.recommended_max_incentive || 0).toFixed(2)} | Channel: ${data.channel_priority || "Email/Phone"}`;
+      document.getElementById("res-drivers").textContent =
+        `Top drivers: ${(data.primary_risk_drivers || []).join(" · ") || "Balanced baseline profile"}`;
+
+      const tierPill = document.getElementById("tier-pill");
+      tierPill.textContent = `Risk Tier: ${data.risk_tier}`;
+      tierPill.className = "pill " + (
+        data.risk_tier === "Critical" || data.risk_tier === "High" ? "crit" :
+        data.risk_tier === "Medium" ? "warn" : "ok"
+      );
+
+      const list = document.getElementById("res-actions");
+      list.innerHTML = "";
+      (data.recommended_actions || []).forEach((item) => {
+        const li = document.createElement("li");
+        li.className = "playbook-item";
+        li.textContent = item;
+        list.appendChild(li);
+      });
+    }
+
+    async function loadDashboardState() {
+      try {
+        const [hRes, mRes, sRes] = await Promise.all([
+          fetch("/health"),
+          fetch("/model-info"),
+          fetch("/monitoring/status")
+        ]);
+        const health = await hRes.json();
+        const healthPill = document.getElementById("health-pill");
+        if (health.model_loaded) {
+          healthPill.textContent = `API Healthy (${health.champion_model})`;
+          healthPill.className = "pill ok";
+          document.getElementById("champion-label").textContent = `Champion: ${health.champion_model}`;
+        } else {
+          healthPill.textContent = "API Up (Model Not Loaded)";
+          healthPill.className = "pill warn";
+        }
+
+        const modelInfo = await mRes.json();
+        const lb = modelInfo.test_leaderboard || {};
+        const entries = Object.entries(lb);
+        if (entries.length) {
+          const rows = entries.map(([name, m]) =>
+            `<tr><td><strong>${name}</strong></td><td>${(m.accuracy * 100).toFixed(2)}%</td><td>${Number(m.roc_auc).toFixed(4)}</td><td>${Number(m.f1_score).toFixed(4)}</td></tr>`
+          ).join("");
+          document.getElementById("leaderboard-container").innerHTML =
+            `<table><thead><tr><th>Model</th><th>Accuracy</th><th>ROC-AUC</th><th>F1</th></tr></thead><tbody>${rows}</tbody></table>`;
+        } else {
+          document.getElementById("leaderboard-container").textContent = "Evaluation metrics not bundled yet.";
+        }
+
+        const mon = await sRes.json();
+        const act = mon.monitoring_actions || {};
+        const sev = mon.status || "UNKNOWN";
+        const driftPill = document.getElementById("drift-pill");
+        driftPill.textContent = `Evidently: ${sev}`;
+        driftPill.className = "pill " + (sev === "CRITICAL" ? "crit" : sev === "WARNING" ? "warn" : "ok");
+
+        if (act.severity) {
+          const actionRows = (act.actions || []).map((a) =>
+            `<tr><td><code>${a.action}</code></td><td>${a.priority}</td><td>${a.status}</td></tr>`
+          ).join("");
+          document.getElementById("monitoring-container").innerHTML =
+            `<div class="muted" style="margin-bottom:0.6rem;">Drifted: <strong>${act.num_drifted_columns ?? 0}/${act.num_columns_checked ?? 0}</strong> | SLA Tests: <strong>${act.tests_passed ?? 0}/${act.tests_total ?? 0}</strong> | Retrain Recommended: <strong>${act.retrain_recommended}</strong></div>` +
+            `<table><thead><tr><th>Action</th><th>Priority</th><th>Status</th></tr></thead><tbody>${actionRows}</tbody></table>`;
+        } else {
+          document.getElementById("monitoring-container").textContent = "Run pipeline or CLI monitoring check to populate Evidently status.";
+        }
+      } catch (e) {
+        document.getElementById("health-pill").textContent = "API Unavailable";
+        document.getElementById("health-pill").className = "pill crit";
+      }
+    }
+
+    loadDashboardState();
+  </script>
+</body>
+</html>

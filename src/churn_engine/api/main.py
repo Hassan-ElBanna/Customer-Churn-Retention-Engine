@@ -8,7 +8,7 @@ from typing import Any, Dict, List
 import joblib
 import pandas as pd
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import Response
+from fastapi.responses import FileResponse, JSONResponse, Response
 from prometheus_client import (
     CONTENT_TYPE_LATEST,
     Counter,
@@ -23,11 +23,18 @@ from churn_engine.api.schemas import (
     RetentionResponse,
 )
 from churn_engine.features.preprocessor import ChurnFeaturePreprocessor
-from churn_engine.monitoring.evidently_monitor import EvidentlyMonitor
 from churn_engine.retention.engine import RetentionEngine
 from churn_engine.utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+ROOT_DIR = Path(__file__).resolve().parents[3]
+
+
+def _resolve_path(env_key: str, default_rel: str) -> Path:
+    raw = Path(os.getenv(env_key, default_rel))
+    return raw if raw.is_absolute() else (ROOT_DIR / raw)
+
 
 app = FastAPI(
     title="Customer Churn & Retention Engine API",
@@ -35,15 +42,19 @@ app = FastAPI(
     version="0.2.0",
 )
 
-MODEL_PATH = Path(os.getenv("MODEL_PATH", "artifacts/models/champion_model.joblib"))
-PREPROCESSOR_PATH = Path(os.getenv("PREPROCESSOR_PATH", "artifacts/models/preprocessor.joblib"))
-MONITORING_ACTIONS_PATH = Path(
-    os.getenv("MONITORING_ACTIONS_PATH", "artifacts/reports/monitoring_actions.json")
+MODEL_PATH = _resolve_path("MODEL_PATH", "artifacts/models/champion_model.joblib")
+PREPROCESSOR_PATH = _resolve_path("PREPROCESSOR_PATH", "artifacts/models/preprocessor.joblib")
+MONITORING_ACTIONS_PATH = _resolve_path(
+    "MONITORING_ACTIONS_PATH", "artifacts/reports/monitoring_actions.json"
 )
-EVIDENTLY_HTML_PATH = Path(
-    os.getenv("EVIDENTLY_HTML_PATH", "artifacts/reports/evidently_drift_report.html")
+EVALUATION_METRICS_PATH = _resolve_path(
+    "EVALUATION_METRICS_PATH", "artifacts/reports/evaluation_metrics.json"
 )
-REFERENCE_DATA_PATH = Path(os.getenv("REFERENCE_DATA_PATH", "data/raw/customer_churn.csv"))
+EVIDENTLY_HTML_PATH = _resolve_path(
+    "EVIDENTLY_HTML_PATH", "artifacts/reports/evidently_drift_report.html"
+)
+REFERENCE_DATA_PATH = _resolve_path("REFERENCE_DATA_PATH", "data/raw/customer_churn.csv")
+PUBLIC_INDEX_PATH = ROOT_DIR / "public" / "index.html"
 
 PREDICTION_COUNTER = Counter(
     "churn_predictions_total",
@@ -85,7 +96,7 @@ _STATE: Dict[str, Any] = {
     "preprocessor": None,
     "model_bundle": None,
     "retention_engine": RetentionEngine(),
-    "monitor": EvidentlyMonitor(),
+    "monitor": None,
 }
 
 
@@ -148,6 +159,20 @@ def _score_customer(payload: CustomerPayload, endpoint_label: str) -> RetentionR
     return RetentionResponse(**plan.to_dict(), model_name=bundle["model_name"])
 
 
+@app.get("/", include_in_schema=False)
+def serve_home() -> Response:
+    """Serve the Vercel/FastAPI web frontend when present, or API metadata JSON."""
+    if PUBLIC_INDEX_PATH.exists():
+        return FileResponse(PUBLIC_INDEX_PATH)
+    return JSONResponse(
+        {
+            "service": "Customer Churn & Retention Engine API",
+            "docs_url": "/docs",
+            "health_url": "/health",
+        }
+    )
+
+
 @app.get("/health")
 def health_check() -> Dict[str, Any]:
     """Liveness and model readiness check."""
@@ -160,6 +185,18 @@ def health_check() -> Dict[str, Any]:
             _STATE["model_bundle"]["model_name"] if _STATE["model_bundle"] else None
         ),
     }
+
+
+@app.get("/model-info")
+def model_info() -> Dict[str, Any]:
+    """Return champion metadata, test leaderboard, and top feature importances."""
+    if not EVALUATION_METRICS_PATH.exists():
+        return {}
+    try:
+        return json.loads(EVALUATION_METRICS_PATH.read_text(encoding="utf-8"))
+    except Exception as exc:
+        logger.warning(f"Failed reading {EVALUATION_METRICS_PATH}: {exc}")
+        return {}
 
 
 @app.get("/metrics")
@@ -200,6 +237,16 @@ def run_monitoring_check(payload: BatchCustomerPayload) -> Dict[str, Any]:
     )
     cur_df = pd.DataFrame([c.features for c in payload.customers])
 
+    try:
+        from churn_engine.monitoring.evidently_monitor import EvidentlyMonitor
+    except ImportError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail="Evidently AI runtime is not installed in lightweight serverless deployment; run batch monitoring via CLI or full container.",
+        ) from exc
+
+    if _STATE["monitor"] is None:
+        _STATE["monitor"] = EvidentlyMonitor()
     monitor: EvidentlyMonitor = _STATE["monitor"]
     summary = monitor.run_monitoring(
         ref_df,

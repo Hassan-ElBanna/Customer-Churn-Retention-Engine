@@ -32,9 +32,15 @@ A production-ready Machine Learning Operations (MLOps) system that predicts cust
 ## Project Structure
 
 ```text
-├── .github/workflows/mlops_ci.yml   # CI/CD linting & automated test workflow
+├── .github/workflows/
+│   ├── mlops_ci.yml               # CI linting & automated test workflow
+│   └── cd_vercel.yml              # Continuous Deployment to Vercel (CI gate -> DVC/retrain -> deploy -> smoke test)
+├── api/
+│   └── index.py                   # Vercel Python Serverless entrypoint exposing FastAPI app
 ├── app/
 │   └── streamlit_app.py             # Interactive Streamlit Command Center & Evidently audit UI
+├── public/
+│   └── index.html                 # Vercel CDN Web Frontend for churn prediction & monitoring
 ├── configs/config.yaml              # Centralized hyperparameters, paths, monitoring & cost settings
 ├── data/
 │   ├── raw/                         # Raw ingested dataset
@@ -63,8 +69,9 @@ A production-ready Machine Learning Operations (MLOps) system that predicts cust
 ├── Dockerfile                       # Production container image
 ├── docker-compose.yml               # FastAPI + Streamlit + MLflow + Prometheus + Grafana stack
 ├── dvc.yaml                         # DVC pipeline stages
-├── pyproject.toml                   # Package metadata & tool configs
-└── requirements.txt                 # Pinned dependencies
+├── pyproject.toml                   # Package metadata & lean runtime dependencies
+├── requirements.txt                 # Cross-platform full MLOps dependency specification
+└── vercel.json                      # Vercel serverless routing & includeFiles configuration
 ```
 
 ---
@@ -122,5 +129,16 @@ Or copy [.env.example](file:///d:/Hassan/Projects/test%20projects/MLOps%20projec
 # FastAPI (:8000/docs & :8000/metrics), Streamlit (:8501), MLflow (:5000), Prometheus (:9090), Grafana (:3000, admin/admin)
 docker compose up --build
 ```
+
+### 6. Continuous Deployment (CD) on Vercel
+
+The repository includes a serverless Vercel deployment ([api/index.py](api/index.py), [public/index.html](public/index.html), [vercel.json](vercel.json)) and an automated GitHub Actions CD pipeline ([.github/workflows/cd_vercel.yml](.github/workflows/cd_vercel.yml)) that runs CI (`ruff` + `pytest`), pulls/verifies model artifacts on Python 3.12, deploys to Vercel production, and smoke-tests `/health` and `/predict`.
+
+> **Note:** Vercel Serverless Functions run stateless FastAPI inference + the CDN web UI (`/`), whereas the stateful Streamlit dashboard (`app/streamlit_app.py`) runs via Docker Compose or Streamlit Community Cloud.
+
+Add these GitHub Repository Secrets (**Settings -> Secrets and variables -> Actions**) to enable automatic CD on every push to `main`:
+- `VERCEL_TOKEN` — Create in Vercel Account Settings -> Tokens
+- `VERCEL_ORG_ID` & `VERCEL_PROJECT_ID` — Shown in your Vercel Project Settings (or generated locally by running `npx vercel link` inside `.vercel/project.json`)
+- `DAGSHUB_USER` & `DAGSHUB_TOKEN` *(optional)* — Used to pull DVC-managed `champion_model.joblib` & `preprocessor.joblib` prior to deploying (if omitted, CD trains compatible Python 3.12 artifacts automatically before deploying).
 
 
